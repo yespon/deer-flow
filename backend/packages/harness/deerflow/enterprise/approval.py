@@ -2,14 +2,17 @@
 
 Provides rule-based approval with state management and notifications.
 """
+
 from __future__ import annotations
+
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from enum import Enum
-from typing import Any, Callable
+from enum import StrEnum
+from typing import Any
 
 
-class ApprovalStatus(str, Enum):
+class ApprovalStatus(StrEnum):
     PENDING = "pending"
     APPROVED = "approved"
     REJECTED = "rejected"
@@ -20,6 +23,7 @@ class ApprovalStatus(str, Enum):
 @dataclass
 class ApprovalRule:
     """Rule for triggering approval."""
+
     name: str
     condition: Callable[[dict[str, Any]], bool]
     approvers: list[str]
@@ -30,6 +34,7 @@ class ApprovalRule:
 @dataclass
 class ApprovalRequest:
     """A pending approval request."""
+
     request_id: str
     rule_name: str
     tenant_id: str
@@ -62,20 +67,24 @@ class ApprovalRuleEngine:
 
     def _register_default_rules(self) -> None:
         """Register default approval rules."""
-        self.register_rule(ApprovalRule(
-            name="financial_transaction",
-            condition=lambda tc: tc.get("amount", 0) > 10000,
-            approvers=["finance_manager", "cfo"],
-            timeout_hours=24,
-            escalation_chain=["cfo", "ceo"],
-        ))
-        self.register_rule(ApprovalRule(
-            name="sensitive_data_access",
-            condition=lambda tc: tc.get("tool") in ["query_database", "export_data"],
-            approvers=["data_owner"],
-            timeout_hours=4,
-            escalation_chain=["admin"],
-        ))
+        self.register_rule(
+            ApprovalRule(
+                name="financial_transaction",
+                condition=lambda tc: tc.get("amount", 0) > 10000,
+                approvers=["finance_manager", "cfo"],
+                timeout_hours=24,
+                escalation_chain=["cfo", "ceo"],
+            )
+        )
+        self.register_rule(
+            ApprovalRule(
+                name="sensitive_data_access",
+                condition=lambda tc: tc.get("tool") in ["query_database", "export_data"],
+                approvers=["data_owner"],
+                timeout_hours=4,
+                escalation_chain=["admin"],
+            )
+        )
 
     def register_rule(self, rule: ApprovalRule) -> None:
         """Register an approval rule."""
@@ -87,10 +96,7 @@ class ApprovalRuleEngine:
 
     def check_rules(self, tool_call: dict[str, Any]) -> list[ApprovalRule]:
         """Check which rules match a tool call."""
-        return [
-            rule for rule in self._rules.values()
-            if rule.condition(tool_call)
-        ]
+        return [rule for rule in self._rules.values() if rule.condition(tool_call)]
 
     def create_request(
         self,
@@ -101,6 +107,7 @@ class ApprovalRuleEngine:
     ) -> ApprovalRequest:
         """Create a new approval request."""
         import uuid
+
         request = ApprovalRequest(
             request_id=str(uuid.uuid4()),
             rule_name=rule_name,

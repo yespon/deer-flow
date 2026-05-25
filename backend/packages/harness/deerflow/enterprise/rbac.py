@@ -5,16 +5,16 @@ This module provides permission checking for enterprise multi-tenant scenarios.
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 from typing import TYPE_CHECKING
 
 import casbin
 
 if TYPE_CHECKING:
-    from deerflow.enterprise.tenancy import Tenant
+    pass
 
 
-class Role(str, Enum):
+class Role(StrEnum):
     """Standard RBAC roles for DeerFlow Enterprise.
 
     Hierarchy (high to low):
@@ -161,10 +161,7 @@ def require_permission(
 ) -> None:
     """Check permission and raise PermissionError if denied."""
     if not check_permission(user_id, tenant_id, resource, action):
-        raise PermissionError(
-            f"User {user_id} does not have {action} permission on {resource} "
-            f"in tenant {tenant_id}"
-        )
+        raise PermissionError(f"User {user_id} does not have {action} permission on {resource} in tenant {tenant_id}")
 
 
 def initialize_default_policies(engine: RBACEngine | None = None, tenant_id: str = "default") -> None:

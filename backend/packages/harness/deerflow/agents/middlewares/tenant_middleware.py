@@ -6,17 +6,18 @@ for all downstream operations.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Any
 
 from deerflow.enterprise.tenancy import (
     Tenant,
-    set_current_tenant,
     reset_current_tenant,
+    set_current_tenant,
 )
 from deerflow.enterprise.tenant_config import TenancyConfig
 
 if TYPE_CHECKING:
-    from deerflow.agents.thread_state import ThreadState
+    pass
 
 
 class TenantResolver:

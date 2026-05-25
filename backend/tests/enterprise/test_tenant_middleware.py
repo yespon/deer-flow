@@ -4,12 +4,11 @@ from unittest.mock import Mock
 
 import pytest
 
-from deerflow.enterprise.tenancy import get_current_tenant
-from deerflow.enterprise.tenant_config import TenancyConfig
 from deerflow.agents.middlewares.tenant_middleware import (
     TenantIdentificationMiddleware,
     TenantResolver,
 )
+from deerflow.enterprise.tenant_config import TenancyConfig
 
 
 class TestTenantResolver:
@@ -73,18 +72,18 @@ class TestTenantIdentificationMiddleware:
 
         assert result == "result"
         # Note: Context is reset after middleware, so we check it was set during execution
-        assert hasattr(request, 'tenant')
+        assert hasattr(request, "tenant")
         assert request.tenant.id == "test_tenant"
 
     def test_middleware_disabled_skips_resolution(self):
         config = TenancyConfig(enabled=False)
         middleware = TenantIdentificationMiddleware(config)
 
-        request = Mock(spec=['headers'])
+        request = Mock(spec=["headers"])
         request.headers = {"X-Tenant-ID": "test"}
 
         next_middleware = Mock(return_value="result")
         result = middleware(request, next_middleware)
 
         assert result == "result"
-        assert not hasattr(request, 'tenant')
+        assert not hasattr(request, "tenant")

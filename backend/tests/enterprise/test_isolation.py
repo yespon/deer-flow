@@ -1,7 +1,5 @@
 """Tests for DeerFlow Enterprise data isolation."""
 
-import pytest
-
 from deerflow.enterprise.isolation import (
     TenantNamespace,
     get_tenant_prefix,
