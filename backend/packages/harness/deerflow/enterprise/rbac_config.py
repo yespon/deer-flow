@@ -7,5 +7,5 @@ class RBACConfig(BaseModel):
     """RBAC configuration."""
 
     enabled: bool = Field(default=False, description="Enable RBAC")
-    model_config: str = Field(default="", description="Custom Casbin model")
+    casbin_model: str = Field(default="", description="Custom Casbin model config")
     policy_file: str | None = Field(default=None, description="Policy CSV file path")
