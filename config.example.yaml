@@ -1089,3 +1089,45 @@ run_events:
 #   failure_threshold: 5
 #   # Time in seconds before attempting to recover (default: 60)
 #   recovery_timeout_sec: 60
+
+# ============================================================================
+# Enterprise Configuration
+# ============================================================================
+# Multi-tenancy, RBAC, and audit logging for enterprise deployments.
+# These features are disabled by default for single-tenant/community use.
+
+# tenancy:
+#   # Enable multi-tenancy (default: false)
+#   enabled: false
+#   # Default isolation mode for new tenants: "strict" or "relaxed"
+#   default_isolation_mode: relaxed
+#   # Tenant identification via HTTP header
+#   header_name: X-Tenant-ID
+#   # Domain pattern for tenant extraction (optional)
+#   # domain_pattern: "{tenant}.deerflow.com"
+#   # Pre-configured tenants
+#   tenants:
+#     - id: default
+#       name: Default Tenant
+#       plan: pro
+#       isolation_mode: relaxed
+#       max_agents: 10
+#       max_storage_gb: 100
+
+# rbac:
+#   # Enable RBAC (default: false)
+#   enabled: false
+#   # Path to custom Casbin model (optional)
+#   # model_config: ""
+#   # Path to policy CSV file (optional)
+#   # policy_file: ""
+
+# audit:
+#   # Enable audit logging (default: false)
+#   enabled: false
+#   # Audit log file path
+#   log_path: .deer-flow/audit.log
+#   # Path to Ed25519 private key (generated if not set)
+#   # private_key_path: ""
+#   # Include event payload in logs (default: true)
+#   include_payload: true

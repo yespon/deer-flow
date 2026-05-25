@@ -30,6 +30,9 @@ from deerflow.config.title_config import TitleConfig, load_title_config_from_dic
 from deerflow.config.token_usage_config import TokenUsageConfig
 from deerflow.config.tool_config import ToolConfig, ToolGroupConfig
 from deerflow.config.tool_search_config import ToolSearchConfig, load_tool_search_config_from_dict
+from deerflow.enterprise.tenant_config import TenancyConfig
+from deerflow.enterprise.rbac_config import RBACConfig
+from deerflow.enterprise.audit_config import AuditConfig
 
 load_dotenv()
 
@@ -107,6 +110,11 @@ class AppConfig(BaseModel):
     run_events: RunEventsConfig = Field(default_factory=RunEventsConfig, description="Run event storage configuration")
     checkpointer: CheckpointerConfig | None = Field(default=None, description="Checkpointer configuration")
     stream_bridge: StreamBridgeConfig | None = Field(default=None, description="Stream bridge configuration")
+
+    # Enterprise configuration
+    tenancy: TenancyConfig = Field(default_factory=TenancyConfig, description="Multi-tenancy configuration")
+    rbac: RBACConfig = Field(default_factory=RBACConfig, description="RBAC configuration")
+    audit: AuditConfig = Field(default_factory=AuditConfig, description="Audit logging configuration")
 
     @classmethod
     def resolve_config_path(cls, config_path: str | None = None) -> Path:

@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeerFlow 企业级架构设计</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #e8e8e8;
+            min-height: 100vh;
+            padding: 40px;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 40px;
+        }
+        .section {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+        .section h3 {
+            color: #9f7aea;
+            margin: 20px 0 10px;
+            font-size: 1.2rem;
+        }
+        .mermaid {
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .module-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .module-card {
+            background: linear-gradient(135deg, rgba(102,126,234,0.2) 0%, rgba(118,75,162,0.2) 100%);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(102,126,234,0.3);
+        }
+        .module-card h4 {
+            color: #fff;
+            margin-bottom: 10px;
+        }
+        .module-card ul {
+            list-style: none;
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+        .module-card li {
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .phase-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .phase {
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+            padding: 20px;
+            border-left: 4px solid #667eea;
+        }
+        .phase-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+        .phase-num {
+            background: #667eea;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        .phase h4 {
+            color: #fff;
+        }
+        .slice-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .slice {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+        .slice strong {
+            color: #9f7aea;
+        }
+        code {
+            background: rgba(0,0,0,0.3);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85em;
+        }
+        .highlight-box {
+            background: linear-gradient(135deg, rgba(239,68,68,0.2) 0%, rgba(239,68,68,0.1) 100%);
+            border: 1px solid rgba(239,68,68,0.3);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .highlight-box.caution {
+            background: linear-gradient(135deg, rgba(245,158,11,0.2) 0%, rgba(245,158,11,0.1) 100%);
+            border-color: rgba(245,158,11,0.3);
+        }
+        .dependency-arrow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            color: #667eea;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 0.9rem;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        th {
+            background: rgba(102,126,234,0.2);
+            color: #fff;
+        }
+        tr:hover {
+            background: rgba(255,255,255,0.03);
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .badge-infra { background: #667eea; color: white; }
+        .badge-core { background: #9f7aea; color: white; }
+        .badge-enhance { background: #10b981; color: white; }
+        .badge-optional { background: #6b7280; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🦌 DeerFlow 企业级架构设计 v2.0</h1>
+        <p class="subtitle">Enterprise Architecture Specification - 6 Modules Integration Design</p>
+
+        <!-- 整体架构图 -->
+        <div class="section">
+            <h2>📐 整体架构视图</h2>
+            <div class="mermaid">
+flowchart TB
+    subgraph Enterprise["🌐 企业级基础设施层"]
+        MT["多租户系统\nMulti-Tenancy"]
+        RBAC["权限控制\nRBAC"]
+        Audit["审计日志\nAudit System"]
+    end
+
+    subgraph Core["⚙️ 核心能力层"]
+        AT["Agent Teams\n编排引擎"]
+        HIL["Human-in-Loop\n审批工作流"]
+        Quota["配额管理\nQuota System"]
+    end
+
+    subgraph Enhance["🔧 增强服务层"]
+        EM["企业级Memory\n知识库集成"]
+        SB["企业沙盒\n审计与隔离"]
+        CE["Context工程\n合规与品牌"]
+    end
+
+    subgraph Runtime["🚀 运行时环境"]
+        Agent["Lead Agent\n主智能体"]
+        Sub["Sub-Agents\n子智能体池"]
+        Tools["工具集\nTools & Skills"]
+    end
+
+    subgraph Storage["💾 存储层"]
+        DB[(State DB)]
+        Vector[(Vector Store)]
+        File[(文件系统)]
+    end
+
+    MT --> RBAC
+    RBAC --> AT
+    RBAC --> HIL
+    RBAC --> Quota
+    Quota --> SB
+    Audit --> SB
+    AT --> Agent
+    HIL --> Agent
+    Agent --> Sub
+    Agent --> Tools
+    EM --> Agent
+    CE --> Agent
+    SB --> Sub
+    Sub --> Storage
+    EM --> Vector
+    Tools --> File
+            </div>
+        </div>
+
+        <!-- 6大模块概览 -->
+        <div class="section">
+            <h2>📦 六大核心模块</h2>
+            <div class="module-grid">
+                <div class="module-card">
+                    <h4>1. 多租户系统</h4>
+                    <span class="badge badge-infra">基础设施</span>
+                    <ul>
+                        <li>TenantContext 线程存储</li>
+                        <li>命名空间隔离</li>
+                        <li>严格/宽松模式</li>
+                        <li>数据隔离边界</li>
+                    </ul>
+                </div>
+                <div class="module-card">
+                    <h4>2. RBAC 权限</h4>
+                    <span class="badge badge-infra">基础设施</span>
+                    <ul>
+                        <li>5级角色体系</li>
+                        <li>资源级权限</li>
+                        <li>策略引擎</li>
+                        <li>动态鉴权</li>
+                    </ul>
+                </div>
+                <div class="module-card">
+                    <h4>3. Agent Teams</h4>
+                    <span class="badge badge-core">核心能力</span>
+                    <ul>
+                        <li>TaskDecomposer</li>
+                        <li>专业 Agent 池</li>
+                        <li>动态编排</li>
+                        <li>结果聚合</li>
+                    </ul>
+                </div>
+                <div class="module-card">
+                    <h4>4. Human-in-Loop</h4>
+                    <span class="badge badge-core">核心能力</span>
+                    <ul>
+                        <li>审批规则引擎</li>
+                        <li>状态挂起/恢复</li>
+                        <li>多渠道通知</li>
+                        <li>审批链</li>
+                    </ul>
+                </div>
+                <div class="module-card">
+                    <h4>5. 企业级沙盒</h4>
+                    <span class="badge badge-enhance">增强层</span>
+                    <ul>
+                        <li>审计事件签名</li>
+                        <li>资源配额</li>
+                        <li>执行追踪</li>
+                        <li>安全策略</li>
+                    </ul>
+                </div>
+                <div class="module-card">
+                    <h4>6. Context工程</h4>
+                    <span class="badge badge-enhance">增强层</span>
+                    <ul>
+                        <li>知识库 RAG</li>
+                        <li>品牌控制</li>
+                        <li>合规过滤</li>
+                        <li>敏感词检测</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- 模块依赖关系 -->
+        <div class="section">
+            <h2>🔗 模块依赖与集成矩阵</h2>
+            <div class="mermaid">
+flowchart LR
+    subgraph L1["Layer 1: 基础设施"]
+        A[多租户]
+        B[RBAC]
+        C[审计系统]
+    end
+
+    subgraph L2["Layer 2: 核心能力"]
+        D[Agent Teams]
+        E[Human-in-Loop]
+        F[配额管理]
+    end
+
+    subgraph L3["Layer 3: 增强服务"]
+        G[企业Memory]
+        H[企业沙盒]
+        I[Context工程]
+    end
+
+    A --> B
+    B --> D
+    B --> E
+    B --> F
+    C --> H
+    F --> H
+    D --> G
+    E --> H
+    G --> I
+    A -.-> G
+    A -.-> H
+            </div>
+
+            <table>
+                <tr>
+                    <th>模块</th>
+                    <th>依赖</th>
+                    <th>被依赖</th>
+                    <th>集成点</th>
+                </tr>
+                <tr>
+                    <td>多租户</td>
+                    <td>-</td>
+                    <td>所有模块</td>
+                    <td>TenantContext, 命名空间</td>
+                </tr>
+                <tr>
+                    <td>RBAC</td>
+                    <td>多租户</td>
+                    <td>Agent Teams, HIL, 配额</td>
+                    <td>权限检查中间件</td>
+                </tr>
+                <tr>
+                    <td>Agent Teams</td>
+                    <td>RBAC, 多租户</td>
+                    <td>企业Memory, Context工程</td>
+                    <td>TaskDecomposer, AgentRegistry</td>
+                </tr>
+                <tr>
+                    <td>Human-in-Loop</td>
+                    <td>RBAC, 审计</td>
+                    <td>运行时</td>
+                    <td>ApprovalMiddleware, 状态管理</td>
+                </tr>
+                <tr>
+                    <td>企业沙盒</td>
+                    <td>配额, 审计, 多租户</td>
+                    <td>运行时</td>
+                    <td>AuditedSandboxProvider</td>
+                </tr>
+                <tr>
+                    <td>企业Memory</td>
+                    <td>多租户, Agent Teams</td>
+                    <td>Context工程</td>
+                    <td>CorporateKnowledgeBase</td>
+                </tr>
+                <tr>
+                    <td>Context工程</td>
+                    <td>企业Memory</td>
+                    <td>运行时</td>
+                    <td>ContextInjectionMiddleware</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- 实施阶段 -->
+        <div class="section">
+            <h2>📋 实施阶段与切片规划</h2>
+            <div class="phase-list">
+                <div class="phase">
+                    <div class="phase-header">
+                        <div class="phase-num">1</div>
+                        <h4>基础设施层 (Phase 1) - 6周</h4>
+                    </div>
+                    <p>构建所有其他模块依赖的基础能力</p>
+                    <div class="slice-list">
+                        <div class="slice">
+                            <strong>切片 1.1:</strong> TenantContext 线程存储与传播机制<br>
+                            <code>TenantMiddleware</code> + <code>get_current_tenant()</code>
+                        </div>
+                        <div class="slice">
+                            <strong>切片 1.2:</strong> 数据隔离边界（DB/向量/文件）<br>
+                            <code>tenant_{id}</code> 命名空间前缀
+                        </div>
+                        <div class="slice">
+                            <strong>切片 1.3:</strong> RBAC 角色模型与策略引擎<br>
+                            5级角色 + 资源权限矩阵
+                        </div>
+                        <div class="slice">
+                            <strong>切片 1.4:</strong> 审计事件收集与存储<br>
+                            <code>AuditEvent</code> + <code>AuditLogger</code>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="phase">
+                    <div class="phase-header">
+                        <div class="phase-num">2</div>
+                        <h4>核心能力层 (Phase 2) - 8周</h4>
+                    </div>
+                    <p>实现 Agent 编排和审批工作流</p>
+                    <div class="slice-list">
+                        <div class="slice">
+                            <strong>切片 2.1:</strong> TaskDecomposer 任务分解器<br>
+                            LLM驱动的子任务生成
+                        </div>
+                        <div class="slice">
+                            <strong>切片 2.2:</strong> AgentRegistry 自定义 Agent 注册<br>
+                            <code>SOUL.md</code> + 能力标签
+                        </div>
+                        <div class="slice">
+                            <strong>切片 2.3:</strong> Agent Teams 编排引擎<br>
+                            并行执行 + 结果聚合
+                        </div>
+                        <div class="slice">
+                            <strong>切片 2.4:</strong> ApprovalRuleEngine 审批规则<br>
+                            金融审批 + 敏感数据审批
+                        </div>
+                        <div class="slice">
+                            <strong>切片 2.5:</strong> Human-in-Loop 状态管理<br>
+                            挂起/恢复 + 多渠道通知
+                        </div>
+                        <div class="slice">
+                            <strong>切片 2.6:</strong> 配额管理引擎<br>
+                            CPU/内存/并发 Agent 限制
+                        </div>
+                    </div>
+                </div>
+
+                <div class="phase">
+                    <div class="phase-header">
+                        <div class="phase-num">3</div>
+                        <h4>增强服务层 (Phase 3) - 8周</h4>
+                    </div>
+                    <p>企业级功能增强和合规能力</p>
+                    <div class="slice-list">
+                        <div class="slice">
+                            <strong>切片 3.1:</strong> CorporateKnowledgeBase 接口<br>
+                            企业知识库连接器
+                        </div>
+                        <div class="slice">
+                            <strong>切片 3.2:</strong> KnowledgeRetrievalMiddleware<br>
+                            RAG 上下文注入
+                        </div>
+                        <div class="slice">
+                            <strong>切片 3.3:</strong> 沙盒审计增强<br>
+                            签名验证 + 执行追踪
+                        </div>
+                        <div class="slice">
+                            <strong>切片 3.4:</strong> 配额强制执行<br>
+                            TenantQuotaMiddleware
+                        </div>
+                        <div class="slice">
+                            <strong>切片 3.5:</strong> BrandController 品牌控制<br>
+                            视觉标准 + 内容规范
+                        </div>
+                        <div class="slice">
+                            <strong>切片 3.6:</strong> ComplianceFilter 合规过滤<br>
+                            敏感词 + 政策审查
+                        </div>
+                    </div>
+                </div>
+
+                <div class="phase">
+                    <div class="phase-header">
+                        <div class="phase-num">4</div>
+                        <h4>集成与优化 (Phase 4) - 4周</h4>
+                    </div>
+                    <p>全系统集成测试和性能优化</p>
+                    <div class="slice-list">
+                        <div class="slice">
+                            <strong>切片 4.1:</strong> 端到端集成测试<br>
+                            多租户 + Agent Teams + 审批流程
+                        </div>
+                        <div class="slice">
+                            <strong>切片 4.2:</strong> 性能优化<br>
+                            配额缓存 + 审计批处理
+                        </div>
+                        <div class="slice">
+                            <strong>切片 4.3:</strong> 安全审计<br>
+                            渗透测试 + 权限边界验证
+                        </div>
+                        <div class="slice">
+                            <strong>切片 4.4:</strong> 文档与示例<br>
+                            API 文档 + 企业部署指南
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 关键设计决策 -->
+        <div class="section">
+            <h2>🎯 关键设计决策</h2>
+
+            <h3>1. 多租户隔离模式</h3>
+            <div class="highlight-box">
+                <strong>决策:</strong> 支持 <code>strict</code> 和 <code>relaxed</code> 两种模式<br>
+                <strong>原因:</strong> 满足不同企业安全要求，从共享实例到完全隔离<br>
+                <strong>实现:</strong> Schema 隔离 vs 行级安全策略
+            </div>
+
+            <h3>2. Agent Teams 编排策略</h3>
+            <div class="highlight-box">
+                <strong>决策:</strong> LLM 驱动的动态编排 + 预定义模板<br>
+                <strong>原因:</strong> 平衡灵活性和可预测性<br>
+                <strong>实现:</strong> TaskDecomposer 生成计划，AgentRegistry 分配执行者
+            </div>
+
+            <h3>3. Human-in-Loop 架构</h3>
+            <div class="highlight-box">
+                <strong>决策:</strong> 状态机驱动的挂起/恢复机制<br>
+                <strong>原因:</strong> 支持长时间审批流程，不阻塞运行时<br>
+                <strong>实现:</strong> ApprovalStateMachine + 持久化队列
+            </div>
+
+            <h3>4. 审计不可篡改</h3>
+            <div class="highlight-box">
+                <strong>决策:</strong> 事件签名 + 链式哈希<br>
+                <strong>原因:</strong> 满足企业合规审计要求<br>
+                <strong>实现:</strong> Ed25519 签名，审计日志只追加
+            </div>
+        </div>
+
+        <!-- 技术栈 -->
+        <div class="section">
+            <h2>🛠️ 推荐技术栈</h2>
+            <table>
+                <tr>
+                    <th>模块</th>
+                    <th>核心组件</th>
+                    <th>存储</th>
+                    <th>集成</th>
+                </tr>
+                <tr>
+                    <td>多租户</td>
+                    <td>contextvars, middleware</td>
+                    <td>PostgreSQL (RLS)</td>
+                    <td>所有路由</td>
+                </tr>
+                <tr>
+                    <td>RBAC</td>
+                    <td>Casbin / Oso</td>
+                    <td>Policy DB</td>
+                    <td>Gateway 层</td>
+                </tr>
+                <tr>
+                    <td>Agent Teams</td>
+                    <td>LangGraph Subgraph</td>
+                    <td>State DB</td>
+                    <td>Lead Agent</td>
+                </tr>
+                <tr>
+                    <td>Human-in-Loop</td>
+                    <td>状态机 + 队列</td>
+                    <td>Redis + DB</td>
+                    <td>飞书/钉钉 API</td>
+                </tr>
+                <tr>
+                    <td>企业Memory</td>
+                    <td>RAG Pipeline</td>
+                    <td>向量数据库</td>
+                    <td>企业知识库</td>
+                </tr>
+                <tr>
+                    <td>企业沙盒</td>
+                    <td>审计中间件</td>
+                    <td>Immutable Log</td>
+                    <td>K8s API</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- 风险评估 -->
+        <div class="section">
+            <h2>⚠️ 风险与缓解策略</h2>
+
+            <div class="highlight-box">
+                <strong>风险 1: 多租户数据泄露</strong><br>
+                缓解: 自动化集成测试覆盖所有边界情况，定期安全审计
+            </div>
+
+            <div class="highlight-box">
+                <strong>风险 2: HIL 状态丢失</strong><br>
+                缓解: 持久化状态机，消息队列确保投递，死信队列处理失败
+            </div>
+
+            <div class="highlight-box caution">
+                <strong>风险 3: Agent Teams 无限递归</strong><br>
+                缓解: 层级限制，Token 预算，循环检测中间件
+            </div>
+
+            <div class="highlight-box caution">
+                <strong>风险 4: 配额绕过</strong><br>
+                缓解: 配额检查在所有入口点，分布式计数器，硬限制优先
+            </div>
+        </div>
+
+        <!-- 验收标准 -->
+        <div class="section">
+            <h2>✅ 验收标准</h2>
+
+            <h3>Phase 1 完成标准</h3>
+            <ul style="list-style: none; padding: 0;">
+                <li>☐ 多租户切换不影响现有功能</li>
+                <li>☐ RBAC 能阻止越权访问</li>
+                <li>☐ 审计日志100%事件覆盖</li>
+                <li>☐ 单测覆盖率 > 80%</li>
+            </ul>
+
+            <h3>Phase 2 完成标准</h3>
+            <ul style="list-style: none; padding: 0;">
+                <li>☐ Agent Teams 完成多步任务</li>
+                <li>☐ HIL 支持24小时以上审批</li>
+                <li>☐ 配额超限被正确拦截</li>
+                <li>☐ 集成测试通过</li>
+            </ul>
+
+            <h3>Phase 3-4 完成标准</h3>
+            <ul style="list-style: none; padding: 0;">
+                <li>☐ 企业知识库RAG准确率 > 85%</li>
+                <li>☐ 沙盒审计日志不可篡改</li>
+                <li>☐ 合规过滤检出率 > 95%</li>
+                <li>☐ 压力测试通过（并发100+）</li>
+            </ul>
+        </div>
+
+    </div>
+
+    <script>
+        mermaid.initialize({
+            theme: 'dark',
+            themeVariables: {
+                primaryColor: '#667eea',
+                primaryTextColor: '#fff',
+                primaryBorderColor: '#764ba2',
+                lineColor: '#667eea',
+                secondaryColor: '#9f7aea',
+                tertiaryColor: '#10b981'
+            }
+        });
+    </script>
+</body>
+</html>
