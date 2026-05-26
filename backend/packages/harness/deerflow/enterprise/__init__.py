@@ -32,6 +32,15 @@ from deerflow.enterprise.audit import (
     ImmutableAuditLog,
 )
 from deerflow.enterprise.audit_config import AuditConfig
+from deerflow.enterprise.quota import (
+    QuotaExceededError,
+    QuotaManager,
+)
+from deerflow.enterprise.quota_config import (
+    QuotaConfig,
+    TenantQuota,
+)
+from deerflow.enterprise.quota_middleware import QuotaMiddleware
 
 __all__ = [
     # Tenancy
@@ -61,4 +70,10 @@ __all__ = [
     "AuditSigner",
     "ImmutableAuditLog",
     "AuditConfig",
+    # Quota
+    "QuotaManager",
+    "QuotaExceededError",
+    "QuotaConfig",
+    "TenantQuota",
+    "QuotaMiddleware",
 ]
