@@ -41,6 +41,7 @@ from deerflow.enterprise.quota_config import (
     TenantQuota,
 )
 from deerflow.enterprise.quota_middleware import QuotaMiddleware
+from deerflow.enterprise.rbac_middleware import RBACMiddleware
 
 __all__ = [
     # Tenancy
@@ -76,4 +77,6 @@ __all__ = [
     "QuotaConfig",
     "TenantQuota",
     "QuotaMiddleware",
+    # RBAC Middleware
+    "RBACMiddleware",
 ]
