@@ -138,6 +138,8 @@ class AgentRegistry:
             "research": "research",
             "web": "research",
             "code": "coding",
+            "python": "coding",
+            "javascript": "coding",
             "programming": "coding",
             "debug": "debugging",
             "data": "data_processing",

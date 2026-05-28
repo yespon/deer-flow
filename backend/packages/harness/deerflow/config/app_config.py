@@ -33,6 +33,10 @@ from deerflow.config.tool_search_config import ToolSearchConfig, load_tool_searc
 from deerflow.enterprise.tenant_config import TenancyConfig
 from deerflow.enterprise.rbac_config import RBACConfig
 from deerflow.enterprise.audit_config import AuditConfig
+from deerflow.enterprise.quota_config import QuotaConfig
+from deerflow.enterprise.approval_config import ApprovalConfig
+from deerflow.enterprise.knowledge_config import KnowledgeBaseConfig
+from deerflow.enterprise.compliance_config import BrandConfig, ComplianceConfig
 
 load_dotenv()
 
@@ -115,6 +119,11 @@ class AppConfig(BaseModel):
     tenancy: TenancyConfig = Field(default_factory=TenancyConfig, description="Multi-tenancy configuration")
     rbac: RBACConfig = Field(default_factory=RBACConfig, description="RBAC configuration")
     audit: AuditConfig = Field(default_factory=AuditConfig, description="Audit logging configuration")
+    quota: QuotaConfig = Field(default_factory=QuotaConfig, description="Quota management configuration")
+    approval: ApprovalConfig = Field(default_factory=ApprovalConfig, description="Human-in-Loop approval workflow configuration")
+    knowledge_base: KnowledgeBaseConfig = Field(default_factory=KnowledgeBaseConfig, description="Enterprise knowledge base and RAG configuration")
+    brand: BrandConfig = Field(default_factory=BrandConfig, description="Brand compliance configuration")
+    compliance: ComplianceConfig = Field(default_factory=ComplianceConfig, description="Content compliance filtering configuration")
 
     @classmethod
     def resolve_config_path(cls, config_path: str | None = None) -> Path:

@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from deerflow.subagents.config import SubagentConfig
-from deerflow.subagents.registry import get_subagent_config, list_subagents
+from deerflow.subagents.registry import get_subagent_config, get_subagent_names
 
 
 @dataclass
@@ -139,7 +139,7 @@ class TaskDecomposer:
 
     def _get_available_agent_types(self) -> list[str]:
         """Get list of available agent types from registry."""
-        return list_subagents()
+        return get_subagent_names()
 
     def _build_decomposition_prompt(
         self,

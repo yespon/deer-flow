@@ -40,8 +40,85 @@ from deerflow.enterprise.quota_config import (
     QuotaConfig,
     TenantQuota,
 )
-from deerflow.enterprise.quota_middleware import QuotaMiddleware
-from deerflow.enterprise.rbac_middleware import RBACMiddleware
+from deerflow.enterprise.approval import (
+    ApprovalRule,
+    ApprovalRuleEngine,
+    ApprovalRequest,
+    ApprovalStatus,
+    get_approval_engine,
+)
+from deerflow.enterprise.approval_state import (
+    ApprovalStateManager,
+    SuspendedState,
+    get_state_manager,
+)
+from deerflow.enterprise.approval_config import (
+    ApprovalConfig,
+    ApprovalNotificationsConfig,
+)
+from deerflow.enterprise.approval_middleware import (
+    ApprovalMiddleware,
+    ApprovalPendingError,
+)
+from deerflow.enterprise.agent_registry import (
+    AgentInstance,
+    AgentRegistry,
+    AgentType,
+    get_agent_registry,
+)
+from deerflow.enterprise.agent_team_orchestrator import (
+    AgentTeamOrchestrator,
+    SubTaskResult,
+    TeamExecutionResult,
+)
+from deerflow.enterprise.task_decomposer import (
+    ExecutionPlan,
+    SubTask,
+    TaskDecomposer,
+)
+from deerflow.enterprise.knowledge_config import (
+    ChunkingConfig,
+    EmbeddingConfig,
+    KnowledgeBaseConfig,
+    RetrievalConfig,
+    VectorStoreConfig,
+)
+from deerflow.enterprise.knowledge_base import (
+    ChunkingStrategy,
+    CorporateKnowledgeBase,
+    DocumentChunk,
+    KnowledgeConnector,
+    KnowledgeDocument,
+    SyncResult,
+)
+from deerflow.enterprise.knowledge_retrieval_middleware import (
+    KnowledgeRetrievalMiddleware,
+)
+from deerflow.enterprise.enterprise_sandbox import (
+    AuditedSandbox,
+    AuditSandboxEventType,
+    EnterpriseSandboxProvider,
+)
+from deerflow.enterprise.brand_controller import (
+    BrandController,
+    BrandGuidelines,
+    BrandIssue,
+    BrandReviewResult,
+)
+from deerflow.enterprise.compliance_filter import (
+    ComplianceFilter,
+    ComplianceRule,
+    ContentType,
+    FilterResult,
+    PolicyRule,
+    SensitiveWordRule,
+    Violation,
+)
+from deerflow.enterprise.compliance_config import (
+    BrandConfig,
+    ComplianceConfig,
+    ComplianceRuleConfig,
+)
 
 __all__ = [
     # Tenancy
@@ -76,7 +153,60 @@ __all__ = [
     "QuotaExceededError",
     "QuotaConfig",
     "TenantQuota",
-    "QuotaMiddleware",
-    # RBAC Middleware
-    "RBACMiddleware",
+    # Approval
+    "ApprovalRule",
+    "ApprovalRuleEngine",
+    "ApprovalRequest",
+    "ApprovalStatus",
+    "get_approval_engine",
+    "ApprovalStateManager",
+    "SuspendedState",
+    "get_state_manager",
+    "ApprovalMiddleware",
+    "ApprovalPendingError",
+    "ApprovalConfig",
+    "ApprovalNotificationsConfig",
+    # Agent Teams
+    "AgentType",
+    "AgentInstance",
+    "AgentRegistry",
+    "get_agent_registry",
+    "TaskDecomposer",
+    "ExecutionPlan",
+    "SubTask",
+    "AgentTeamOrchestrator",
+    "SubTaskResult",
+    "TeamExecutionResult",
+    # Knowledge Base
+    "KnowledgeBaseConfig",
+    "VectorStoreConfig",
+    "EmbeddingConfig",
+    "ChunkingConfig",
+    "RetrievalConfig",
+    "CorporateKnowledgeBase",
+    "KnowledgeDocument",
+    "DocumentChunk",
+    "KnowledgeConnector",
+    "SyncResult",
+    "ChunkingStrategy",
+    "KnowledgeRetrievalMiddleware",
+    # Enterprise Sandbox
+    "EnterpriseSandboxProvider",
+    "AuditedSandbox",
+    "AuditSandboxEventType",
+    # Brand & Compliance
+    "BrandController",
+    "BrandGuidelines",
+    "BrandIssue",
+    "BrandReviewResult",
+    "ComplianceFilter",
+    "ComplianceRule",
+    "ContentType",
+    "FilterResult",
+    "PolicyRule",
+    "SensitiveWordRule",
+    "Violation",
+    "BrandConfig",
+    "ComplianceConfig",
+    "ComplianceRuleConfig",
 ]
