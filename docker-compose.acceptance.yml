@@ -1,0 +1,82 @@
+# DeerFlow Enterprise Acceptance Test Environment
+# Usage: docker-compose -f docker-compose.acceptance.yml up -d
+
+version: "3.8"
+
+services:
+  test-runner:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      - TEST_MODE=acceptance
+      - DATABASE_URL=postgresql://deerflow:password@postgres:5432/deerflow_test
+      - REDIS_URL=redis://redis:6379
+      - CHROMA_URL=http://chroma:8000
+    volumes:
+      - ./backend/tests:/app/tests
+      - ./test-results:/app/test-results
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      chroma:
+        condition: service_started
+    command: >
+      sh -c "cd /app &&
+             pip install pytest pytest-asyncio locust &&
+             pytest tests/enterprise/acceptance/ci_tests/ -v --tb=short"
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: deerflow_test
+      POSTGRES_USER: deerflow
+      POSTGRES_PASSWORD: password
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U deerflow -d deerflow_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "6379:6379"
+
+  chroma:
+    image: chromadb/chroma:latest
+    volumes:
+      - chromadata:/chroma/chroma
+    environment:
+      - IS_PERSISTENT=TRUE
+      - PERSIST_DIRECTORY=/chroma/chroma
+    ports:
+      - "8000:8000"
+
+  locust:
+    image: locustio/locust
+    volumes:
+      - ./backend/tests/enterprise/acceptance/load_tests:/mnt/locust
+    command: -f /mnt/locust/locustfile.py --host http://test-runner:8001
+    depends_on:
+      - test-runner
+    ports:
+      - "8089:8089"
+
+volumes:
+  pgdata:
+  redisdata:
+  chromadata:
