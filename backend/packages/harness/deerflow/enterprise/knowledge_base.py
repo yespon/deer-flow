@@ -411,7 +411,7 @@ class CorporateKnowledgeBase:
         results = []
 
         if self._vector_store and query_embedding:
-            raw_results = self._vector_store.search(
+            raw_results = await self._vector_store.search(
                 collection=collection,
                 query_embedding=query_embedding,
                 top_k=top_k,
