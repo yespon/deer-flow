@@ -1,5 +1,5 @@
-from dataclasses import dataclass
 import random
+from dataclasses import dataclass
 
 
 @dataclass
@@ -19,12 +19,14 @@ class SyntheticTenantGenerator:
         tenants = []
         for i in range(count):
             plan = random.choice(self.PLANS)
-            tenants.append(SyntheticTenant(
-                id=f"tenant_{i:04d}",
-                name=f"Company {i}",
-                plan=plan,
-                quota_config=self._quota_for_plan(plan),
-            ))
+            tenants.append(
+                SyntheticTenant(
+                    id=f"tenant_{i:04d}",
+                    name=f"Company {i}",
+                    plan=plan,
+                    quota_config=self._quota_for_plan(plan),
+                )
+            )
         return tenants
 
     def _quota_for_plan(self, plan: str) -> dict:

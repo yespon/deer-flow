@@ -96,6 +96,14 @@ class TestChunkingStrategy:
         # Each chunk should be around 50 chars
         assert len(chunks[0]) <= 50
 
+    def test_chunk_by_fixed_size_caps_overlap_to_avoid_stall(self):
+        content = "A" * 200
+
+        chunks = ChunkingStrategy.chunk_by_fixed_size(content, chunk_size=50, overlap=50)
+
+        assert len(chunks) > 1
+        assert all(chunk for chunk in chunks)
+
     def test_chunk_by_sentences(self):
         content = "First sentence. Second sentence. Third sentence."
         chunks = ChunkingStrategy.chunk_by_sentences(content, sentences_per_chunk=2)
@@ -155,6 +163,7 @@ class TestCorporateKnowledgeBase:
     def test_chunk_document_fixed_size(self, mock_kb):
         mock_kb.config.chunking.strategy = "fixed_size"
         mock_kb.config.chunking.chunk_size = 50
+        mock_kb.config.chunking.chunk_overlap = 50
 
         doc = KnowledgeDocument(
             doc_id="doc_1",
@@ -172,6 +181,7 @@ class TestCorporateKnowledgeBase:
     def test_search_requires_tenant(self, mock_kb):
         with pytest.raises(ValueError, match="tenant_id is required"):
             import asyncio
+
             asyncio.run(mock_kb.search("query", tenant_id=None))
 
     def test_format_context(self, mock_kb):
@@ -197,6 +207,7 @@ class TestCorporateKnowledgeBase:
 
         with pytest.raises(ValueError, match="tenant_id is required"):
             import asyncio
+
             asyncio.run(mock_kb.add_document(doc, tenant_id=None))
 
     def test_delete_document(self, mock_kb):

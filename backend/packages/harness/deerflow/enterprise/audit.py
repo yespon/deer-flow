@@ -1,17 +1,20 @@
 """Immutable audit logging with Ed25519 signatures."""
+
 from __future__ import annotations
+
 import hashlib
 import json
 import uuid
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
 from typing import Any
-from cryptography.hazmat.primitives import hashes, serialization
+
 from cryptography.hazmat.primitives.asymmetric import ed25519
 
-class AuditEventType(str, Enum):
+
+class AuditEventType(StrEnum):
     SANDBOX_ACQUIRED = "sandbox.acquired"
     SANDBOX_RELEASED = "sandbox.released"
     COMMAND_EXECUTED = "command.executed"
@@ -25,6 +28,7 @@ class AuditEventType(str, Enum):
     AGENT_CREATED = "agent.created"
     AGENT_EXECUTED = "agent.executed"
     SUBAGENT_SPAWNED = "subagent.spawned"
+
 
 @dataclass
 class AuditEvent:
@@ -52,6 +56,7 @@ class AuditEvent:
     @property
     def hash(self) -> str:
         return hashlib.sha256(self.to_signing_bytes()).hexdigest()
+
 
 class AuditSigner:
     def __init__(self, private_key: ed25519.Ed25519PrivateKey | None = None) -> None:
@@ -86,6 +91,7 @@ class AuditSigner:
         except Exception:
             return False
 
+
 class ImmutableAuditLog:
     def __init__(self, log_path: str, signer: AuditSigner | None = None) -> None:
         self.log_path = Path(log_path)
@@ -110,23 +116,25 @@ class ImmutableAuditLog:
         events = []
         if not self.log_path.exists():
             return events
-        with open(self.log_path, "r") as f:
+        with open(self.log_path) as f:
             for line in f:
                 line = line.strip()
                 if not line:
                     continue
                 data = json.loads(line)
-                events.append(AuditEvent(
-                    event_type=AuditEventType(data["event_type"]),
-                    tenant_id=data["tenant_id"],
-                    thread_id=data["thread_id"],
-                    sandbox_id=data.get("sandbox_id", ""),
-                    timestamp=datetime.fromisoformat(data["timestamp"]),
-                    payload=data.get("payload", {}),
-                    event_id=data["event_id"],
-                    previous_hash=data.get("previous_hash", ""),
-                    signature=data.get("signature", ""),
-                ))
+                events.append(
+                    AuditEvent(
+                        event_type=AuditEventType(data["event_type"]),
+                        tenant_id=data["tenant_id"],
+                        thread_id=data["thread_id"],
+                        sandbox_id=data.get("sandbox_id", ""),
+                        timestamp=datetime.fromisoformat(data["timestamp"]),
+                        payload=data.get("payload", {}),
+                        event_id=data["event_id"],
+                        previous_hash=data.get("previous_hash", ""),
+                        signature=data.get("signature", ""),
+                    )
+                )
         return events
 
     def verify_chain(self) -> bool:

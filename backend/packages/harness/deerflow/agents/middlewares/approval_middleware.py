@@ -124,11 +124,7 @@ class ApprovalMiddleware(AgentMiddleware[ThreadState]):
         tool_call_id = str(request.tool_call.get("id") or "missing_id")
         tool_name = request.tool_call.get("name", "unknown")
 
-        content = (
-            f"❌ **Approval Rejected**\n\n"
-            f"Tool call `{tool_name}` was rejected by {approval.approver}.\n\n"
-            f"**Reason:** Human reviewer denied this operation."
-        )
+        content = f"❌ **Approval Rejected**\n\nTool call `{tool_name}` was rejected by {approval.approver}.\n\n**Reason:** Human reviewer denied this operation."
 
         return ToolMessage(
             content=content,
@@ -188,8 +184,7 @@ class ApprovalMiddleware(AgentMiddleware[ThreadState]):
         )
 
         logger.info(
-            "[ApprovalMiddleware] Suspended execution for approval: "
-            "request_id=%s rule=%s thread=%s",
+            "[ApprovalMiddleware] Suspended execution for approval: request_id=%s rule=%s thread=%s",
             approval.request_id,
             rule.name,
             thread_id,

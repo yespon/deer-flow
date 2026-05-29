@@ -15,7 +15,6 @@ from langchain_core.messages import ToolMessage
 from langgraph.types import Command
 
 from deerflow.agents.thread_state import ThreadState
-from deerflow.enterprise.agent_registry import get_agent_registry
 from deerflow.enterprise.agent_team_orchestrator import AgentTeamOrchestrator
 from deerflow.enterprise.task_decomposer import TaskDecomposer
 from deerflow.enterprise.tenancy import get_current_tenant
@@ -99,10 +98,7 @@ class AgentTeamMiddleware(AgentMiddleware[ThreadState]):
                 return False
 
         # Check for complex task indicators
-        complex_score = sum(
-            1 for keyword in _COMPLEX_TASK_KEYWORDS
-            if keyword in desc_lower
-        )
+        complex_score = sum(1 for keyword in _COMPLEX_TASK_KEYWORDS if keyword in desc_lower)
 
         # Require at least 2 complex keywords or specific patterns
         if complex_score >= 2:
@@ -162,10 +158,7 @@ class AgentTeamMiddleware(AgentMiddleware[ThreadState]):
         thread_id = self._get_thread_id()
 
         # Decompose task
-        logger.info(
-            "Decomposing task for Agent Team: tenant=%s, thread=%s",
-            tenant_id, thread_id
-        )
+        logger.info("Decomposing task for Agent Team: tenant=%s, thread=%s", tenant_id, thread_id)
 
         plan = await decomposer.decompose(
             goal=task_description,
@@ -176,10 +169,7 @@ class AgentTeamMiddleware(AgentMiddleware[ThreadState]):
             logger.warning("Task decomposition returned no tasks")
             return "Task could not be decomposed into sub-tasks."
 
-        logger.info(
-            "Executing plan with %d tasks: %s",
-            len(plan.tasks), plan.parallel_groups
-        )
+        logger.info("Executing plan with %d tasks: %s", len(plan.tasks), plan.parallel_groups)
 
         # Execute plan
         result = await orchestrator.execute_plan(
@@ -188,10 +178,7 @@ class AgentTeamMiddleware(AgentMiddleware[ThreadState]):
             tenant_id=tenant_id,
         )
 
-        logger.info(
-            "Agent Team execution complete: success=%d, failed=%d",
-            result.success_count, result.failure_count
-        )
+        logger.info("Agent Team execution complete: success=%d, failed=%d", result.success_count, result.failure_count)
 
         return result.aggregated_output
 
@@ -217,20 +204,15 @@ class AgentTeamMiddleware(AgentMiddleware[ThreadState]):
 
         # Check if complex enough for Agent Teams
         if not self._is_complex_task(task_description):
-            logger.debug(
-                "Task not complex enough for Agent Team: %s",
-                task_description[:50]
-            )
+            logger.debug("Task not complex enough for Agent Team: %s", task_description[:50])
             return handler(request)
 
-        logger.info(
-            "Routing complex task to Agent Team: %s",
-            task_description[:50]
-        )
+        logger.info("Routing complex task to Agent Team: %s", task_description[:50])
 
         try:
             # Execute with Agent Teams
             import asyncio
+
             result = asyncio.run(self._execute_with_agent_team(task_description))
 
             return ToolMessage(
@@ -239,10 +221,7 @@ class AgentTeamMiddleware(AgentMiddleware[ThreadState]):
                 name=tool_name,
             )
         except Exception as e:
-            logger.error(
-                "Agent Team execution failed: %s. Falling back to default handler.",
-                e
-            )
+            logger.error("Agent Team execution failed: %s. Falling back to default handler.", e)
             return handler(request)
 
     @override
@@ -267,16 +246,10 @@ class AgentTeamMiddleware(AgentMiddleware[ThreadState]):
 
         # Check if complex enough for Agent Teams
         if not self._is_complex_task(task_description):
-            logger.debug(
-                "Task not complex enough for Agent Team (async): %s",
-                task_description[:50]
-            )
+            logger.debug("Task not complex enough for Agent Team (async): %s", task_description[:50])
             return await handler(request)
 
-        logger.info(
-            "Routing complex task to Agent Team (async): %s",
-            task_description[:50]
-        )
+        logger.info("Routing complex task to Agent Team (async): %s", task_description[:50])
 
         try:
             # Execute with Agent Teams
@@ -288,8 +261,5 @@ class AgentTeamMiddleware(AgentMiddleware[ThreadState]):
                 name=tool_name,
             )
         except Exception as e:
-            logger.error(
-                "Agent Team execution failed (async): %s. Falling back.",
-                e
-            )
+            logger.error("Agent Team execution failed (async): %s. Falling back.", e)
             return await handler(request)

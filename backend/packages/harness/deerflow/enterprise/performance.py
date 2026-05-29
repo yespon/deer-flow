@@ -10,14 +10,12 @@ from __future__ import annotations
 
 import time
 from collections import deque
-from dataclasses import dataclass, field
-from typing import Any, Generic, TypeVar
-
-T = TypeVar("T")
+from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass
-class CachedValue(Generic[T]):
+class CachedValue[T]:
     """Cached value with timestamp."""
 
     value: T
@@ -66,10 +64,7 @@ class TTLCache:
     def cleanup_expired(self) -> int:
         """Remove expired entries and return count removed."""
         now = time.time()
-        expired = [
-            k for k, v in self._cache.items()
-            if now - v.timestamp > self.ttl
-        ]
+        expired = [k for k, v in self._cache.items() if now - v.timestamp > self.ttl]
         for k in expired:
             del self._cache[k]
         return len(expired)
@@ -134,10 +129,7 @@ class BatchedAuditLog:
 
     async def _maybe_flush(self) -> None:
         """Flush if batch size or time threshold reached."""
-        should_flush = (
-            len(self._queue) >= self.config.max_batch_size
-            or time.time() - self._last_flush >= self.config.max_wait_seconds
-        )
+        should_flush = len(self._queue) >= self.config.max_batch_size or time.time() - self._last_flush >= self.config.max_wait_seconds
 
         if should_flush and self._queue:
             await self.flush()
@@ -288,10 +280,7 @@ class KBQueryCache:
     def invalidate_tenant(self, tenant_id: str) -> None:
         """Invalidate all cached queries for tenant."""
         prefix = f"kb:{tenant_id}:"
-        keys_to_delete = [
-            k for k in self.cache._cache.keys()
-            if k.startswith(prefix)
-        ]
+        keys_to_delete = [k for k in self.cache._cache.keys() if k.startswith(prefix)]
         for k in keys_to_delete:
             self.cache.delete(k)
 

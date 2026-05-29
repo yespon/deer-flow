@@ -139,9 +139,7 @@ class ChunkingStrategy:
                 chunks.append(para)
             else:
                 # Split large paragraphs
-                sub_chunks = ChunkingStrategy.chunk_by_fixed_size(
-                    para, chunk_size=max_chunk_size, overlap=0
-                )
+                sub_chunks = ChunkingStrategy.chunk_by_fixed_size(para, chunk_size=max_chunk_size, overlap=0)
                 chunks.extend(sub_chunks)
 
         return chunks
@@ -161,12 +159,15 @@ class ChunkingStrategy:
         """
         if not content:
             return []
+        if chunk_size <= 0:
+            raise ValueError("chunk_size must be positive")
 
         chunks = []
         start = 0
+        effective_overlap = min(max(overlap, 0), chunk_size - 1)
 
         while start < len(content):
-            end = start + chunk_size
+            end = min(start + chunk_size, len(content))
             chunk = content[start:end]
 
             # Try to break at word boundary
@@ -174,12 +175,14 @@ class ChunkingStrategy:
                 # Look for space or newline to break
                 for i in range(min(len(chunk), 20), 0, -1):
                     if chunk[-i] in " \n":
-                        chunk = chunk[:-i]
-                        end = start + len(chunk)
+                        candidate_chunk = chunk[:-i]
+                        if candidate_chunk:
+                            chunk = candidate_chunk
+                            end = start + len(chunk)
                         break
 
             chunks.append(chunk.strip())
-            start = end - overlap
+            start = end - effective_overlap
 
         return chunks
 
@@ -190,7 +193,7 @@ class ChunkingStrategy:
         Uses simple sentence splitting (period + space or newline).
         """
         # Simple sentence splitting
-        sentences = re.split(r'(?<=[.!?])\s+', content.strip())
+        sentences = re.split(r"(?<=[.!?])\s+", content.strip())
         sentences = [s.strip() for s in sentences if s.strip()]
 
         chunks = []
@@ -234,23 +237,14 @@ class CorporateKnowledgeBase:
         """Initialize vector store connection."""
         # Placeholder - would initialize actual vector store client
         # based on config.vector_store.provider
-        logger.info(
-            "Initializing vector store: %s",
-            self.config.vector_store.provider
-        )
+        logger.info("Initializing vector store: %s", self.config.vector_store.provider)
         self._vector_store = MockVectorStore()
 
     def _initialize_embedder(self) -> None:
         """Initialize embedding model."""
         # Placeholder - would initialize actual embedder
-        logger.info(
-            "Initializing embedder: %s / %s",
-            self.config.embedding.provider,
-            self.config.embedding.model
-        )
-        self._embedder = MockEmbedder(
-            dimensions=self.config.embedding.dimensions
-        )
+        logger.info("Initializing embedder: %s / %s", self.config.embedding.provider, self.config.embedding.model)
+        self._embedder = MockEmbedder(dimensions=self.config.embedding.dimensions)
 
     def _ensure_enabled(self) -> None:
         """Check if knowledge base is enabled."""
@@ -313,7 +307,7 @@ class CorporateKnowledgeBase:
         # Process in batches
         batch_size = self.config.embedding.batch_size
         for i in range(0, len(chunks), batch_size):
-            batch = chunks[i:i + batch_size]
+            batch = chunks[i : i + batch_size]
             texts = [c.content for c in batch]
             embeddings = await self._embedder.embed(texts)
 
@@ -368,10 +362,7 @@ class CorporateKnowledgeBase:
                     },
                 )
 
-        logger.info(
-            "Added document %s with %d chunks for tenant %s",
-            doc.doc_id, len(chunks), tenant_id
-        )
+        logger.info("Added document %s with %d chunks for tenant %s", doc.doc_id, len(chunks), tenant_id)
 
         return chunks
 
@@ -522,12 +513,14 @@ class MockVectorStore:
         # Mock search - return all items (in production, would do actual similarity)
         results = []
         for chunk_id, data in self._collections[collection].items():
-            results.append({
-                "chunk_id": chunk_id,
-                "content": data["content"],
-                "metadata": data["metadata"],
-                "score": 0.9,
-            })
+            results.append(
+                {
+                    "chunk_id": chunk_id,
+                    "content": data["content"],
+                    "metadata": data["metadata"],
+                    "score": 0.9,
+                }
+            )
 
         return results[:top_k]
 
@@ -537,10 +530,7 @@ class MockVectorStore:
 
         doc_id = filter.get("doc_id")
         if doc_id:
-            to_delete = [
-                cid for cid, data in self._collections[collection].items()
-                if data.get("metadata", {}).get("doc_id") == doc_id
-            ]
+            to_delete = [cid for cid, data in self._collections[collection].items() if data.get("metadata", {}).get("doc_id") == doc_id]
             for cid in to_delete:
                 del self._collections[collection][cid]
 
@@ -554,9 +544,7 @@ class MockEmbedder:
     async def embed(self, texts: list[str]) -> list[list[float]]:
         """Return mock embeddings."""
         import random
+
         random.seed(42)
 
-        return [
-            [random.random() for _ in range(self.dimensions)]
-            for _ in texts
-        ]
+        return [[random.random() for _ in range(self.dimensions)] for _ in texts]

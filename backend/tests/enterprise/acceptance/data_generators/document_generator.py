@@ -1,5 +1,5 @@
-from dataclasses import dataclass
 import random
+from dataclasses import dataclass
 
 
 @dataclass
@@ -20,9 +20,13 @@ class DocumentCorpusGenerator:
     }
 
     TOPICS = [
-        "refund policy", "data privacy", "security guidelines",
-        "expense reimbursement", "remote work policy",
-        "code of conduct", "IT support procedures",
+        "refund policy",
+        "data privacy",
+        "security guidelines",
+        "expense reimbursement",
+        "remote work policy",
+        "code of conduct",
+        "IT support procedures",
     ]
 
     def generate(self, tenant_id: str, count: int) -> list[SyntheticDocument]:
@@ -30,12 +34,14 @@ class DocumentCorpusGenerator:
         for i in range(count):
             topic = random.choice(self.TOPICS)
             doc_type = random.choice(list(self.TEMPLATES.keys()))
-            documents.append(SyntheticDocument(
-                doc_id=f"doc_{tenant_id}_{i:04d}",
-                title=f"{topic.title()} - {i}",
-                content=self._generate_content(doc_type, topic),
-                tenant_id=tenant_id,
-            ))
+            documents.append(
+                SyntheticDocument(
+                    doc_id=f"doc_{tenant_id}_{i:04d}",
+                    title=f"{topic.title()} - {i}",
+                    content=self._generate_content(doc_type, topic),
+                    tenant_id=tenant_id,
+                )
+            )
         return documents
 
     def _generate_content(self, doc_type: str, topic: str) -> str:

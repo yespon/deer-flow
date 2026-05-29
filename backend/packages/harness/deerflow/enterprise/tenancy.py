@@ -6,10 +6,11 @@ enabling data isolation across multiple enterprise tenants.
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from contextlib import contextmanager
 from contextvars import ContextVar, Token
 from dataclasses import dataclass
-from typing import Final, Generator, Literal
+from typing import Final, Literal
 
 
 @dataclass(frozen=True, slots=True)
@@ -154,9 +155,6 @@ def resolve_tenant_id(
     if isinstance(value, _AutoSentinel):
         tenant = _current_tenant.get()
         if tenant is None:
-            raise RuntimeError(
-                f"{method_name} called with tenant_id=AUTO but no tenant context is set; "
-                "pass an explicit tenant_id or use tenant_context()"
-            )
+            raise RuntimeError(f"{method_name} called with tenant_id=AUTO but no tenant context is set; pass an explicit tenant_id or use tenant_context()")
         return tenant.id
     return value

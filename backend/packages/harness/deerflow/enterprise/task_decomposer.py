@@ -9,7 +9,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-from deerflow.subagents.config import SubagentConfig
 from deerflow.subagents.registry import get_subagent_config, get_subagent_names
 
 
@@ -148,10 +147,7 @@ class TaskDecomposer:
         available_agents: list[str],
     ) -> str:
         """Build prompt for LLM decomposition."""
-        agents_info = "\n".join(
-            f"- {name}: {self._get_agent_description(name)}"
-            for name in available_agents
-        )
+        agents_info = "\n".join(f"- {name}: {self._get_agent_description(name)}" for name in available_agents)
 
         return f"""Decompose the following goal into sub-tasks that can be executed by specialized agents.
 

@@ -7,18 +7,16 @@ pending human approval.
 from __future__ import annotations
 
 import logging
-from collections.abc import Awaitable, Callable
-from typing import override
+from collections.abc import Callable
+from typing import Any, override
 
 from langchain.agents.middleware import AgentMiddleware
 from langchain_core.messages import ToolMessage
-from langgraph.types import Command
 
 from deerflow.agents.thread_state import ThreadState
-from deerflow.enterprise.approval import ApprovalRequest, ApprovalStatus, get_approval_engine
+from deerflow.enterprise.approval import ApprovalRequest, get_approval_engine
 from deerflow.enterprise.approval_state import get_state_manager
 from deerflow.enterprise.tenancy import get_current_tenant
-
 
 logger = logging.getLogger(__name__)
 
@@ -75,13 +73,7 @@ class ApprovalMiddleware(AgentMiddleware[ThreadState]):
         tool_call_id = str(tool_call.get("id") or "missing_id")
         tool_name = tool_call.get("name", "unknown")
 
-        content = (
-            f"⏳ Approval Required\n\n"
-            f"Tool '{tool_name}' requires approval before execution.\n"
-            f"Rule: {approval_request.rule_name}\n"
-            f"Approval ID: {approval_request.request_id}\n\n"
-            f"Please wait for an administrator to approve this request."
-        )
+        content = f"⏳ Approval Required\n\nTool '{tool_name}' requires approval before execution.\nRule: {approval_request.rule_name}\nApproval ID: {approval_request.request_id}\n\nPlease wait for an administrator to approve this request."
 
         return ToolMessage(
             content=content,
@@ -174,9 +166,7 @@ class ApprovalMiddleware(AgentMiddleware[ThreadState]):
         thread_id = self._get_thread_id()
 
         # Check if approval is needed
-        approval_request = self._check_and_create_approval(
-            tool_call, tenant_id, thread_id
-        )
+        approval_request = self._check_and_create_approval(tool_call, tenant_id, thread_id)
 
         if approval_request:
             # Approval required - suspend execution
@@ -191,10 +181,7 @@ class ApprovalMiddleware(AgentMiddleware[ThreadState]):
             return self._build_pending_message(approval_request, tool_call)
 
         # No approval needed - proceed
-        logger.debug(
-            "Tool call allowed: tool=%s, tenant=%s",
-            tool_name, tenant_id
-        )
+        logger.debug("Tool call allowed: tool=%s, tenant=%s", tool_name, tenant_id)
         return handler(request)
 
     @override
@@ -214,9 +201,7 @@ class ApprovalMiddleware(AgentMiddleware[ThreadState]):
         thread_id = self._get_thread_id()
 
         # Check if approval is needed
-        approval_request = self._check_and_create_approval(
-            tool_call, tenant_id, thread_id
-        )
+        approval_request = self._check_and_create_approval(tool_call, tenant_id, thread_id)
 
         if approval_request:
             # Approval required - suspend execution
@@ -231,8 +216,5 @@ class ApprovalMiddleware(AgentMiddleware[ThreadState]):
             return self._build_pending_message(approval_request, tool_call)
 
         # No approval needed - proceed
-        logger.debug(
-            "Tool call allowed (async): tool=%s, tenant=%s",
-            tool_name, tenant_id
-        )
+        logger.debug("Tool call allowed (async): tool=%s, tenant=%s", tool_name, tenant_id)
         return await handler(request)

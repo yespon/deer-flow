@@ -3,7 +3,7 @@
 Run with: locust -f locustfile.py --host http://localhost:8001
 """
 
-from locust import HttpUser, task, between
+from locust import HttpUser, between, task
 
 
 class EnterpriseUser(HttpUser):

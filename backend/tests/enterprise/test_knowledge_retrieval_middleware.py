@@ -85,15 +85,11 @@ class TestKnowledgeRetrievalMiddleware:
     async def test_retrieves_knowledge_for_llm_calls(self, middleware):
         """Should retrieve knowledge for LLM tool calls."""
         with patch.object(middleware, "_get_knowledge_base") as mock_kb:
-            mock_kb.return_value.search.return_value = [
-                Mock(content="Knowledge about AI")
-            ]
+            mock_kb.return_value.search.return_value = [Mock(content="Knowledge about AI")]
 
             # Mock state with messages
             mock_state = Mock()
-            mock_state.messages = [
-                Mock(type="human", content="Tell me about AI")
-            ]
+            mock_state.messages = [Mock(type="human", content="Tell me about AI")]
 
             with patch.object(middleware, "_get_current_state", return_value=mock_state):
                 request = Mock()
@@ -101,6 +97,7 @@ class TestKnowledgeRetrievalMiddleware:
 
                 # Create a handler that captures the modified request
                 captured_kwargs = {}
+
                 def handler(req, **kwargs):
                     captured_kwargs.update(kwargs)
                     return ToolMessage(content="AI is...", tool_call_id="call_1", name="chat")

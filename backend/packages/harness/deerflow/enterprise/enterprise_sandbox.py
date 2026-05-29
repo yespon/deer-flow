@@ -13,8 +13,8 @@ from typing import TYPE_CHECKING, Any, Protocol
 
 if TYPE_CHECKING:
     from deerflow.enterprise.audit import AuditEventType
-    from deerflow.sandbox.sandbox import Sandbox
     from deerflow.sandbox.provider import SandboxProvider
+    from deerflow.sandbox.sandbox import Sandbox
 
 
 class AuditSandboxEventType(Enum):

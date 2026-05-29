@@ -1,7 +1,6 @@
-import pytest
-from .data_generators.tenant_generator import SyntheticTenantGenerator
 from .data_generators.document_generator import DocumentCorpusGenerator, SyntheticDocument
 from .data_generators.qa_generator import QAGenerator
+from .data_generators.tenant_generator import SyntheticTenantGenerator
 
 
 def test_tenant_generator_creates_valid_tenants():

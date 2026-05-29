@@ -5,7 +5,6 @@ from unittest.mock import Mock, patch
 import pytest
 from langchain_core.messages import ToolMessage
 
-from deerflow.enterprise.quota import QuotaExceededError
 from deerflow.enterprise.quota_config import QuotaConfig, TenantQuota
 from deerflow.enterprise.quota_middleware import QuotaMiddleware
 
@@ -90,9 +89,7 @@ class TestQuotaMiddleware:
 
             middleware.wrap_tool_call(request, handler)
 
-            middleware._quota_manager.acquire.assert_called_with(
-                "tenant_abc", "concurrent_sandboxes", limit=5
-            )
+            middleware._quota_manager.acquire.assert_called_with("tenant_abc", "concurrent_sandboxes", limit=5)
 
     def test_async_version_works(self, middleware):
         middleware._quota_manager.acquire.return_value = True
@@ -104,6 +101,7 @@ class TestQuotaMiddleware:
             return ToolMessage(content="ok", tool_call_id="call_1", name="bash")
 
         import asyncio
+
         result = asyncio.run(middleware.awrap_tool_call(request, async_handler))
 
         assert result.content == "ok"

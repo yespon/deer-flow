@@ -6,7 +6,6 @@ import pytest
 from langchain_core.messages import ToolMessage
 
 from deerflow.enterprise.agent_team_middleware import AgentTeamMiddleware
-from deerflow.enterprise.task_decomposer import ExecutionPlan, SubTask
 
 
 class TestAgentTeamMiddleware:
@@ -91,7 +90,6 @@ class TestAgentTeamMiddleware:
             async def async_handler(request):
                 return ToolMessage(content="ok", tool_call_id="call_1", name="read_file")
 
-            import asyncio
             result = await middleware.awrap_tool_call(request, async_handler)
 
             assert result.content == "ok"

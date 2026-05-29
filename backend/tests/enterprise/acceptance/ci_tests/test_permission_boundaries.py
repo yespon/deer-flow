@@ -6,11 +6,11 @@ Fast-running tests for CI pipeline covering:
 - Audit log integrity
 """
 
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 
-from deerflow.enterprise import RBACEngine, Tenant, TenantNamespace
+from deerflow.enterprise import RBACEngine
 
 
 class TestPermissionBoundaries:

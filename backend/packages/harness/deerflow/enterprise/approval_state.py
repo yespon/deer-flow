@@ -2,19 +2,22 @@
 
 Manages suspended execution states and approval workflow persistence.
 """
+
 from __future__ import annotations
+
 import json
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from deerflow.enterprise.approval import ApprovalRequest, ApprovalStatus, get_approval_engine
+from deerflow.enterprise.approval import ApprovalRequest, ApprovalStatus
 
 
 @dataclass
 class SuspendedState:
     """A suspended execution state waiting for approval."""
+
     thread_id: str
     checkpoint: dict[str, Any]
     approval: ApprovalRequest
@@ -59,7 +62,7 @@ class ApprovalStateManager:
         if not state_file.exists():
             return None
 
-        with open(state_file, "r") as f:
+        with open(state_file) as f:
             data = json.load(f)
 
         return self._dict_to_state(data)
@@ -76,7 +79,7 @@ class ApprovalStateManager:
         """List all pending suspended states."""
         states = []
         for state_file in self.storage_path.glob("*.json"):
-            with open(state_file, "r") as f:
+            with open(state_file) as f:
                 data = json.load(f)
             state = self._dict_to_state(data)
             if state.approval.status == ApprovalStatus.PENDING:

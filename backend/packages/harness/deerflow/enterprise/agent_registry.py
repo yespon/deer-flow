@@ -9,10 +9,9 @@ Extends the base subagent registry with enterprise features:
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Callable
 
 from deerflow.subagents.config import SubagentConfig
-from deerflow.subagents.registry import get_subagent_config, list_subagents
+from deerflow.subagents.registry import get_subagent_config
 
 
 @dataclass
@@ -122,10 +121,7 @@ class AgentRegistry:
 
     def find_agents_by_capability(self, capability: str) -> list[AgentType]:
         """Find agent types that match a capability requirement."""
-        return [
-            agent for agent in self._agent_types.values()
-            if agent.matches_requirement(capability)
-        ]
+        return [agent for agent in self._agent_types.values() if agent.matches_requirement(capability)]
 
     def select_best_agent(self, task_description: str) -> AgentType | None:
         """Select the best agent type for a given task.
@@ -164,11 +160,7 @@ class AgentRegistry:
         best_agent = None
         best_score = 0.0
         for agent in self._agent_types.values():
-            score = sum(
-                agent.specialization_score
-                for cap in matched_capabilities
-                if agent.matches_requirement(cap)
-            )
+            score = sum(agent.specialization_score for cap in matched_capabilities if agent.matches_requirement(cap))
             if score > best_score:
                 best_score = score
                 best_agent = agent

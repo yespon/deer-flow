@@ -3,8 +3,6 @@
 Fast-running tests for CI pipeline verifying tenant data isolation.
 """
 
-import pytest
-
 from deerflow.enterprise import Tenant, TenantNamespace
 
 

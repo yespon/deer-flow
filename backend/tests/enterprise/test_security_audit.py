@@ -12,13 +12,11 @@ from unittest.mock import Mock
 import pytest
 
 from deerflow.enterprise import (
-    AuditedSandbox,
     BrandController,
     BrandGuidelines,
     ComplianceFilter,
     ContentType,
     EnterpriseSandboxProvider,
-    KnowledgeDocument,
     RBACEngine,
     Tenant,
     TenantNamespace,
@@ -132,7 +130,7 @@ class TestAuditLogIntegrity:
         audit_log.log = Mock()
 
         # Log a sandbox operation
-        provider = EnterpriseSandboxProvider(
+        EnterpriseSandboxProvider(
             base_provider=Mock(),
             audit_log=audit_log,
         )

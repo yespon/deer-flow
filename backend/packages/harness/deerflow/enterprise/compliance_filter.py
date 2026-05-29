@@ -96,7 +96,7 @@ class SensitiveWordRule(PolicyRule):
 
         for word in self.words:
             # Use word boundary matching
-            pattern = r'\b' + re.escape(word) + r'\b'
+            pattern = r"\b" + re.escape(word) + r"\b"
             if re.search(pattern, content_lower):
                 return Violation(
                     rule=self.name,
@@ -206,7 +206,7 @@ class ComplianceFilter:
         content_lower = content.lower()
 
         for word in self.sensitive_words:
-            pattern = r'\b' + re.escape(word) + r'\b'
+            pattern = r"\b" + re.escape(word) + r"\b"
             if re.search(pattern, content_lower):
                 violations.append(
                     Violation(
@@ -222,15 +222,15 @@ class ComplianceFilter:
     def _has_media(self, content: str) -> bool:
         """Detect if content contains media elements."""
         # Markdown images
-        if re.search(r'!\[.*?\]\(.*?\)', content):
+        if re.search(r"!\[.*?\]\(.*?\)", content):
             return True
 
         # HTML images/media
-        if re.search(r'<(img|video|audio|iframe)\s', content, re.IGNORECASE):
+        if re.search(r"<(img|video|audio|iframe)\s", content, re.IGNORECASE):
             return True
 
         # URLs with media extensions
-        media_exts = r'\.(png|jpg|jpeg|gif|svg|webp|mp4|mp3|mov)(\?|$|\s)'
+        media_exts = r"\.(png|jpg|jpeg|gif|svg|webp|mp4|mp3|mov)(\?|$|\s)"
         if re.search(media_exts, content, re.IGNORECASE):
             return True
 
@@ -263,7 +263,7 @@ class ComplianceFilter:
                 # Replace with asterisks
                 replacement = "*" * len(matched_word)
                 sanitized = re.sub(
-                    r'\b' + re.escape(matched_word) + r'\b',
+                    r"\b" + re.escape(matched_word) + r"\b",
                     replacement,
                     sanitized,
                     flags=re.IGNORECASE,

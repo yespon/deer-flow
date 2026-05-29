@@ -13,7 +13,6 @@ from deerflow.enterprise import (
     AgentTeamOrchestrator,
     ApprovalRule,
     ApprovalRuleEngine,
-    ApprovalStatus,
     AuditedSandbox,
     AuditSandboxEventType,
     BrandController,
@@ -26,9 +25,7 @@ from deerflow.enterprise import (
     KnowledgeBaseConfig,
     KnowledgeDocument,
     KnowledgeRetrievalMiddleware,
-    QuotaManager,
     RBACEngine,
-    Role,
     SubTask,
     TaskDecomposer,
     Tenant,
@@ -63,7 +60,7 @@ class TestEndToEndAgentTeamsWithApproval:
         """Should decompose complex task, require approval for sensitive tools."""
         # Setup
         task_decomposer = TaskDecomposer()
-        orchestrator = AgentTeamOrchestrator(max_parallel=2)
+        AgentTeamOrchestrator(max_parallel=2)
         approval_engine = ApprovalRuleEngine()
 
         # Create approval rule for sensitive operations
@@ -140,21 +137,23 @@ class TestEndToEndKnowledgeBaseRAG:
 
         # Mock vector store
         kb._vector_store = Mock()
-        kb._vector_store.search = AsyncMock(return_value=[
-            {"content": "Tenant-specific policy", "score": 0.9},
-        ])
+        kb._vector_store.search = AsyncMock(
+            return_value=[
+                {"content": "Tenant-specific policy", "score": 0.9},
+            ]
+        )
         kb._embedder = Mock()
         kb._embedder.embed = AsyncMock(return_value=[[0.1] * 1536])
 
         # Add document for tenant
-        doc = KnowledgeDocument(
+        KnowledgeDocument(
             doc_id="doc_1",
             title="Company Policy",
             content="This is the tenant-specific policy document.",
         )
 
         # Search within tenant context
-        chunks = await kb.search(
+        await kb.search(
             query="company policy",
             tenant_id=mock_tenant.id,
             top_k=5,
@@ -218,9 +217,7 @@ class TestEndToEndSandboxAuditChain:
     async def test_quota_enforcement_blocks_exceeded(self, enterprise_context):
         """Should block sandbox acquisition when quota exceeded."""
         quota_manager = Mock()
-        quota_manager.check_before_acquire = AsyncMock(
-            side_effect=Exception("Quota exceeded: max_concurrent_sandboxes")
-        )
+        quota_manager.check_before_acquire = AsyncMock(side_effect=Exception("Quota exceeded: max_concurrent_sandboxes"))
 
         provider = EnterpriseSandboxProvider(
             base_provider=Mock(),
@@ -262,9 +259,7 @@ class TestEndToEndBrandCompliance:
         assert any(i.type == "forbidden_word" for i in brand_result.issues)
 
         # Compliance check - sensitive words are high severity, not blocked
-        compliance_result = await compliance_filter.filter_output(
-            content, ContentType.TEXT
-        )
+        compliance_result = await compliance_filter.filter_output(content, ContentType.TEXT)
         # High severity is warning, not block
         assert compliance_result.blocked is False
         assert any(v.rule == "sensitive_word" for v in compliance_result.violations)
@@ -286,9 +281,7 @@ class TestEndToEndBrandCompliance:
         content = "Welcome to Acme Corp! We provide excellent service."
 
         brand_result = await brand_controller.review_content(content)
-        compliance_result = await compliance_filter.filter_output(
-            content, ContentType.TEXT
-        )
+        compliance_result = await compliance_filter.filter_output(content, ContentType.TEXT)
 
         assert brand_result.approved is True
         assert compliance_result.blocked is False
@@ -332,17 +325,13 @@ class TestEndToEndFullWorkflow:
         assert audit_log.log.called
 
         # 5. Brand check generated content
-        brand = BrandController(
-            BrandGuidelines(brand_name="Acme", forbidden_words=["badword"])
-        )
+        brand = BrandController(BrandGuidelines(brand_name="Acme", forbidden_words=["badword"]))
         brand_result = await brand.review_content("Hello from Acme!")
         assert brand_result.approved is True
 
         # 6. Compliance check
         compliance = ComplianceFilter(sensitive_words=["secret"])
-        compliance_result = await compliance.filter_output(
-            "Hello from Acme!", ContentType.TEXT
-        )
+        compliance_result = await compliance.filter_output("Hello from Acme!", ContentType.TEXT)
         assert compliance_result.blocked is False
 
     @pytest.mark.asyncio

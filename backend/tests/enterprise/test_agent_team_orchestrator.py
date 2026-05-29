@@ -1,10 +1,9 @@
 """Tests for AgentTeamOrchestrator."""
 
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 
-from deerflow.enterprise.agent_registry import AgentType
 from deerflow.enterprise.agent_team_orchestrator import (
     AgentTeamOrchestrator,
     SubTaskResult,

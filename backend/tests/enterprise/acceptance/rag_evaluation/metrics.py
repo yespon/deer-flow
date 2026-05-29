@@ -7,7 +7,6 @@ Implements standard RAG evaluation metrics:
 """
 
 from dataclasses import dataclass
-from typing import List
 
 
 @dataclass
@@ -26,17 +25,10 @@ class RAGMetrics:
         - MRR >= 0.75
         - NDCG @ 10 >= 0.80
         """
-        return (
-            self.hit_rate_at_5 >= 0.85 and
-            self.mrr >= 0.75 and
-            self.ndcg_at_10 >= 0.80
-        )
+        return self.hit_rate_at_5 >= 0.85 and self.mrr >= 0.75 and self.ndcg_at_10 >= 0.80
 
     def __str__(self) -> str:
-        return (
-            f"RAGMetrics(hit_rate@5={self.hit_rate_at_5:.2%}, "
-            f"mrr={self.mrr:.3f}, ndcg@10={self.ndcg_at_10:.3f})"
-        )
+        return f"RAGMetrics(hit_rate@5={self.hit_rate_at_5:.2%}, mrr={self.mrr:.3f}, ndcg@10={self.ndcg_at_10:.3f})"
 
 
 class RAGAccuracyEvaluator:
@@ -44,8 +36,8 @@ class RAGAccuracyEvaluator:
 
     def evaluate(
         self,
-        results: List[dict],
-        expected_doc_ids: List[List[str]],
+        results: list[dict],
+        expected_doc_ids: list[list[str]],
     ) -> RAGMetrics:
         """
         Evaluate retrieval results.
@@ -83,8 +75,8 @@ class RAGAccuracyEvaluator:
 
     def _compute_ndcg(
         self,
-        results: List[dict],
-        expected_doc_ids: List[List[str]],
+        results: list[dict],
+        expected_doc_ids: list[list[str]],
         k: int = 10,
     ) -> float:
         """Compute NDCG @ k.
@@ -105,14 +97,14 @@ class RAGAccuracyEvaluator:
                 if rid in expected:
                     # Binary relevance: 1 if relevant, 0 otherwise
                     rel = 1
-                    dcg += (2 ** rel - 1) / math.log2(i + 1)
+                    dcg += (2**rel - 1) / math.log2(i + 1)
 
             # Compute IDCG (ideal DCG)
             # Ideal case: all relevant docs at top
             idcg = 0.0
             for i in range(1, min(len(expected), k) + 1):
                 rel = 1
-                idcg += (2 ** rel - 1) / math.log2(i + 1)
+                idcg += (2**rel - 1) / math.log2(i + 1)
 
             # NDCG
             if idcg > 0:

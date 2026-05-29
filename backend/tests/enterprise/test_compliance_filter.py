@@ -1,15 +1,11 @@
 """Tests for ComplianceFilter and content compliance checking."""
 
-from unittest.mock import Mock
-
 import pytest
 
 from deerflow.enterprise.compliance_filter import (
     ComplianceFilter,
-    ComplianceRule,
     ContentType,
     FilterResult,
-    PolicyRule,
     SensitiveWordRule,
     Violation,
 )

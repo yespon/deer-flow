@@ -11,7 +11,8 @@ import time
 
 import pytest
 
-from deerflow.enterprise import set_current_tenant, get_current_tenant
+from deerflow.enterprise import get_current_tenant, set_current_tenant
+
 from ..data_generators.tenant_generator import SyntheticTenantGenerator
 
 
@@ -45,7 +46,7 @@ class TestEnterpriseFunctionLoad:
         avg_latency = sum(all_latencies) / len(all_latencies)
         p99_latency = sorted(all_latencies)[int(len(all_latencies) * 0.99)]
 
-        print(f"\nTenant context switching - Avg: {avg_latency*1000:.2f}ms, P99: {p99_latency*1000:.2f}ms")
+        print(f"\nTenant context switching - Avg: {avg_latency * 1000:.2f}ms, P99: {p99_latency * 1000:.2f}ms")
 
         # Assert performance criteria (relaxed for test environment)
         assert avg_latency < 0.050, f"Avg latency {avg_latency}s exceeds 50ms"
@@ -57,7 +58,6 @@ class TestEnterpriseFunctionLoad:
 
         Verifies quota enforcement accuracy under high concurrency.
         """
-        from unittest.mock import Mock, patch
         from deerflow.enterprise import QuotaManager
 
         # Create a mock quota manager that simulates quota checks
@@ -104,10 +104,7 @@ class TestEnterpriseFunctionLoad:
             return elapsed, result
 
         # 50 concurrent approval checks
-        tool_calls = [
-            {"tool": "bash", "args": {"command": f"echo {i}"}}
-            for i in range(50)
-        ]
+        tool_calls = [{"tool": "bash", "args": {"command": f"echo {i}"}} for i in range(50)]
 
         tasks = [check_approval(tc) for tc in tool_calls]
         results = await asyncio.gather(*tasks)
@@ -115,7 +112,7 @@ class TestEnterpriseFunctionLoad:
         latencies = [lat for lat, _ in results]
         avg_latency = sum(latencies) / len(latencies)
 
-        print(f"\nApproval checks - Avg latency: {avg_latency*1000:.2f}ms")
+        print(f"\nApproval checks - Avg latency: {avg_latency * 1000:.2f}ms")
 
         # Should complete in reasonable time
         assert avg_latency < 1.0, f"Avg latency {avg_latency}s exceeds 1s"

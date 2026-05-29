@@ -63,7 +63,5 @@ class QuotaConfig(BaseModel):
         """Validate that redis_url starts with a valid Redis scheme."""
         valid_schemes = ("redis://", "rediss://", "unix://")
         if not v.startswith(valid_schemes):
-            raise ValueError(
-                f"redis_url must start with one of {valid_schemes}"
-            )
+            raise ValueError(f"redis_url must start with one of {valid_schemes}")
         return v

@@ -126,7 +126,7 @@ class BrandController:
 
         for word in self.guidelines.forbidden_words:
             # Match whole words using word boundaries
-            pattern = r'\b' + re.escape(word.lower()) + r'\b'
+            pattern = r"\b" + re.escape(word.lower()) + r"\b"
             if re.search(pattern, content_lower):
                 issues.append(
                     BrandIssue(
@@ -193,15 +193,15 @@ class BrandController:
     def has_visual_content(self, content: str) -> bool:
         """Detect if content contains visual elements (images, etc.)."""
         # Check for markdown images
-        if re.search(r'!\[.*?\]\(.*?\)', content):
+        if re.search(r"!\[.*?\]\(.*?\)", content):
             return True
 
         # Check for HTML images
-        if re.search(r'<img\s', content, re.IGNORECASE):
+        if re.search(r"<img\s", content, re.IGNORECASE):
             return True
 
         # Check for image URLs (common extensions)
-        image_extensions = r'\.(png|jpg|jpeg|gif|svg|webp)(\?|$|\s)'
+        image_extensions = r"\.(png|jpg|jpeg|gif|svg|webp)(\?|$|\s)"
         if re.search(image_extensions, content, re.IGNORECASE):
             return True
 
@@ -212,7 +212,7 @@ class BrandController:
         refs = []
 
         # Markdown images
-        markdown_pattern = r'!\[.*?\]\((.*?)\)'
+        markdown_pattern = r"!\[.*?\]\((.*?)\)"
         refs.extend(re.findall(markdown_pattern, content))
 
         # HTML images

@@ -30,6 +30,4 @@ class ApprovalConfig(BaseModel):
     enabled: bool = Field(default=False)
     default_timeout_hours: int = Field(default=24, ge=1)
     storage_path: str = Field(default=".deer-flow/approvals")
-    notifications: ApprovalNotificationsConfig = Field(
-        default_factory=ApprovalNotificationsConfig
-    )
+    notifications: ApprovalNotificationsConfig = Field(default_factory=ApprovalNotificationsConfig)

@@ -1,5 +1,5 @@
 """Tests for approval workflow."""
-import pytest
+
 from deerflow.enterprise.approval import (
     ApprovalRequest,
     ApprovalRule,

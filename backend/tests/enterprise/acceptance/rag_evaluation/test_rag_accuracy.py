@@ -5,7 +5,6 @@ Evaluates RAG system accuracy using curated Q&A pairs.
 
 import json
 from pathlib import Path
-from unittest.mock import Mock
 
 import pytest
 
@@ -114,10 +113,12 @@ class TestRAGAccuracy:
         for qa in qa_pairs:
             doc_id = qa["relevant_doc_ids"][0]
             # Simulate retrieval - return the relevant doc at position 1
-            results.append([
-                {"doc_id": doc_id, "score": 0.9},
-                {"doc_id": "doc_other", "score": 0.7},
-            ])
+            results.append(
+                [
+                    {"doc_id": doc_id, "score": 0.9},
+                    {"doc_id": "doc_other", "score": 0.7},
+                ]
+            )
             expected_ids.append(qa["relevant_doc_ids"])
 
         metrics = evaluator.evaluate(results, expected_ids)
@@ -130,7 +131,6 @@ class TestRAGAccuracy:
 
     def test_dcg_calculation(self):
         """Test DCG/NDCG calculation."""
-        import math
 
         evaluator = RAGAccuracyEvaluator()
 

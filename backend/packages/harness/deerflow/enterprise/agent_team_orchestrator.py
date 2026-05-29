@@ -2,10 +2,11 @@
 
 Manages execution of sub-tasks across multiple agents with dependency tracking.
 """
+
 from __future__ import annotations
+
 import asyncio
 from dataclasses import dataclass, field
-from typing import Any
 
 from deerflow.enterprise.agent_registry import AgentInstance, get_agent_registry
 from deerflow.enterprise.task_decomposer import ExecutionPlan, SubTask
@@ -15,6 +16,7 @@ from deerflow.subagents.executor import SubagentExecutor
 @dataclass
 class SubTaskResult:
     """Result of a sub-task execution."""
+
     task_id: str
     status: str  # success, failed, timeout
     output: str = ""
@@ -26,6 +28,7 @@ class SubTaskResult:
 @dataclass
 class TeamExecutionResult:
     """Result of executing an entire plan."""
+
     plan: ExecutionPlan
     results: dict[str, SubTaskResult] = field(default_factory=dict)
     aggregated_output: str = ""
@@ -70,16 +73,11 @@ class AgentTeamOrchestrator:
                 agent_type = self.registry.select_best_agent(task.description)
                 if agent_type:
                     instance_id = f"{thread_id}_{task.id}"
-                    instance = self.registry.create_instance(
-                        agent_type.name, instance_id
-                    )
+                    instance = self.registry.create_instance(agent_type.name, instance_id)
                     instances.append((task, instance))
 
             # Execute in parallel with semaphore
-            coros = [
-                self._execute_subtask(task, instance, thread_id, tenant_id)
-                for task, instance in instances
-            ]
+            coros = [self._execute_subtask(task, instance, thread_id, tenant_id) for task, instance in instances]
             group_results = await asyncio.gather(*coros, return_exceptions=True)
 
             # Store results
@@ -94,9 +92,7 @@ class AgentTeamOrchestrator:
                     result.results[task.id] = task_result
 
         # Aggregate outputs
-        result.aggregated_output = self._aggregate_results(
-            plan, result.results
-        )
+        result.aggregated_output = self._aggregate_results(plan, result.results)
 
         return result
 
@@ -110,17 +106,13 @@ class AgentTeamOrchestrator:
         """Execute a single sub-task with resource limiting."""
         async with self._semaphore:
             # Update status
-            self.registry.update_instance_status(
-                instance.instance_id, "running"
-            )
+            self.registry.update_instance_status(instance.instance_id, "running")
 
             start_time = asyncio.get_event_loop().time()
 
             try:
                 # Get subagent config
-                subagent_config = self.registry.get_subagent_config(
-                    instance.agent_type
-                )
+                subagent_config = self.registry.get_subagent_config(instance.agent_type)
 
                 if not subagent_config:
                     return SubTaskResult(
@@ -143,9 +135,7 @@ class AgentTeamOrchestrator:
                     tenant_id=tenant_id,
                 )
 
-                execution_time = int(
-                    (asyncio.get_event_loop().time() - start_time) * 1000
-                )
+                execution_time = int((asyncio.get_event_loop().time() - start_time) * 1000)
 
                 # Update instance
                 self.registry.update_instance_status(
@@ -163,9 +153,7 @@ class AgentTeamOrchestrator:
                 )
 
             except Exception as e:
-                self.registry.update_instance_status(
-                    instance.instance_id, "failed"
-                )
+                self.registry.update_instance_status(instance.instance_id, "failed")
                 return SubTaskResult(
                     task_id=task.id,
                     status="failed",

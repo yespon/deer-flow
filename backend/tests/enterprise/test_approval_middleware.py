@@ -40,7 +40,7 @@ class TestApprovalMiddleware:
             mock_request.status = ApprovalStatus.PENDING
             mock_engine.return_value.create_request.return_value = mock_request
 
-            with patch("deerflow.enterprise.approval_middleware.get_state_manager") as mock_state:
+            with patch("deerflow.enterprise.approval_middleware.get_state_manager"):
                 request = Mock()
                 request.tool_call = {"name": "query_database", "args": {"sql": "SELECT *"}, "id": "call_1"}
                 handler = Mock()
@@ -115,6 +115,7 @@ class TestApprovalMiddleware:
                     return ToolMessage(content="ok", tool_call_id="call_1", name="transfer_funds")
 
                 import asyncio
+
                 result = asyncio.run(middleware.awrap_tool_call(request, async_handler))
 
                 assert isinstance(result, ToolMessage)

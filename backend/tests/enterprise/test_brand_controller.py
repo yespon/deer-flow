@@ -1,7 +1,5 @@
 """Tests for BrandController and brand compliance."""
 
-from unittest.mock import Mock
-
 import pytest
 
 from deerflow.enterprise.brand_controller import (

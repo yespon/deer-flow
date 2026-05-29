@@ -5,12 +5,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from langchain_core.messages import ToolMessage
-from langgraph.prebuilt.tool_node import ToolCallRequest
 
 from deerflow.agents.middlewares.approval_middleware import ApprovalMiddleware
-from deerflow.enterprise.approval import ApprovalStatus, get_approval_engine
-from deerflow.enterprise.approval_state import get_state_manager
-
+from deerflow.enterprise.approval import ApprovalStatus
 
 # -----------------------------------------------------------------------------
 # Helpers
@@ -176,6 +173,7 @@ class TestApprovalMiddlewarePendingMessage:
         assert "Request ID:" in result.content
         # UUID pattern check
         import re
+
         uuid_pattern = r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
         assert re.search(uuid_pattern, result.content)
 
@@ -211,19 +209,22 @@ class TestApprovalMiddlewareResumedExecution:
         mock_approval.status = ApprovalStatus.APPROVED
         mock_approval.approver = "finance_manager"
 
-        with patch.object(
-            mw._state_manager,
-            "list_pending",
-            return_value=[
-                MagicMock(
-                    thread_id="thread-1",
-                    approval=mock_approval,
-                )
-            ],
-        ), patch.object(
-            mw._approval_engine,
-            "get_request",
-            return_value=mock_approval,
+        with (
+            patch.object(
+                mw._state_manager,
+                "list_pending",
+                return_value=[
+                    MagicMock(
+                        thread_id="thread-1",
+                        approval=mock_approval,
+                    )
+                ],
+            ),
+            patch.object(
+                mw._approval_engine,
+                "get_request",
+                return_value=mock_approval,
+            ),
         ):
             result = mw.wrap_tool_call(request, handler)
 
@@ -286,19 +287,22 @@ class TestApprovalMiddlewareAsync:
         mock_approval.request_id = "req-123"
         mock_approval.status = ApprovalStatus.APPROVED
 
-        with patch.object(
-            mw._state_manager,
-            "list_pending",
-            return_value=[
-                MagicMock(
-                    thread_id="thread-1",
-                    approval=mock_approval,
-                )
-            ],
-        ), patch.object(
-            mw._approval_engine,
-            "get_request",
-            return_value=mock_approval,
+        with (
+            patch.object(
+                mw._state_manager,
+                "list_pending",
+                return_value=[
+                    MagicMock(
+                        thread_id="thread-1",
+                        approval=mock_approval,
+                    )
+                ],
+            ),
+            patch.object(
+                mw._approval_engine,
+                "get_request",
+                return_value=mock_approval,
+            ),
         ):
             result = await mw.awrap_tool_call(request, async_handler)
 

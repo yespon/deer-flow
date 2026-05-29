@@ -16,7 +16,6 @@ from deerflow.enterprise.rbac import check_permission
 from deerflow.enterprise.tenancy import get_current_tenant
 from deerflow.runtime.user_context import get_effective_user_id
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -69,13 +68,7 @@ class RBACMiddleware(AgentMiddleware[ThreadState]):
         tool_call_id = str(request.tool_call.get("id") or "missing_id")
         tool_name = request.tool_call.get("name", "unknown")
 
-        content = (
-            f"❌ Permission Denied\n\n"
-            f"You don't have permission to execute '{tool_name}'.\n"
-            f"Required: {resource}:{action}\n"
-            f"User: {user_id}\n\n"
-            f"Contact your administrator if you need access."
-        )
+        content = f"❌ Permission Denied\n\nYou don't have permission to execute '{tool_name}'.\nRequired: {resource}:{action}\nUser: {user_id}\n\nContact your administrator if you need access."
 
         return ToolMessage(
             content=content,
@@ -102,18 +95,10 @@ class RBACMiddleware(AgentMiddleware[ThreadState]):
         allowed = check_permission(user_id, tenant_id, resource, action)
 
         if not allowed:
-            logger.warning(
-                "RBAC denied: user=%s tenant=%s resource=%s action=%s tool=%s",
-                user_id, tenant_id, resource, action, tool_name
-            )
-            return self._build_permission_denied_message(
-                request, user_id, resource, action
-            )
+            logger.warning("RBAC denied: user=%s tenant=%s resource=%s action=%s tool=%s", user_id, tenant_id, resource, action, tool_name)
+            return self._build_permission_denied_message(request, user_id, resource, action)
 
-        logger.debug(
-            "RBAC allowed: user=%s tenant=%s resource=%s action=%s tool=%s",
-            user_id, tenant_id, resource, action, tool_name
-        )
+        logger.debug("RBAC allowed: user=%s tenant=%s resource=%s action=%s tool=%s", user_id, tenant_id, resource, action, tool_name)
         return handler(request)
 
     @override
@@ -134,12 +119,7 @@ class RBACMiddleware(AgentMiddleware[ThreadState]):
         allowed = check_permission(user_id, tenant_id, resource, action)
 
         if not allowed:
-            logger.warning(
-                "RBAC denied (async): user=%s tenant=%s resource=%s action=%s tool=%s",
-                user_id, tenant_id, resource, action, tool_name
-            )
-            return self._build_permission_denied_message(
-                request, user_id, resource, action
-            )
+            logger.warning("RBAC denied (async): user=%s tenant=%s resource=%s action=%s tool=%s", user_id, tenant_id, resource, action, tool_name)
+            return self._build_permission_denied_message(request, user_id, resource, action)
 
         return await handler(request)

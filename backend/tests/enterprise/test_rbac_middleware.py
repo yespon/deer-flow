@@ -124,6 +124,7 @@ class TestRBACMiddleware:
                 return ToolMessage(content="ok", tool_call_id="call_1", name="read_file")
 
             import asyncio
+
             result = asyncio.run(middleware.awrap_tool_call(request, async_handler))
 
             assert result.content == "ok"

@@ -26,10 +26,7 @@ class QuotaExceededError(Exception):
         self.resource = resource
         self.limit = limit
         self.current = current
-        super().__init__(
-            f"Quota exceeded for tenant '{tenant_id}': "
-            f"{resource} ({current}/{limit})"
-        )
+        super().__init__(f"Quota exceeded for tenant '{tenant_id}': {resource} ({current}/{limit})")
 
 
 class QuotaManager:
@@ -96,16 +93,10 @@ class QuotaManager:
         if current > limit:
             # Over limit, decrement and reject
             self._redis.decr(key)
-            logger.warning(
-                "Quota exceeded: tenant=%s resource=%s limit=%d",
-                tenant_id, resource, limit
-            )
+            logger.warning("Quota exceeded: tenant=%s resource=%s limit=%d", tenant_id, resource, limit)
             return False
 
-        logger.debug(
-            "Quota acquired: tenant=%s resource=%s current=%d/%d",
-            tenant_id, resource, current, limit
-        )
+        logger.debug("Quota acquired: tenant=%s resource=%s current=%d/%d", tenant_id, resource, current, limit)
         return True
 
     def release(
@@ -127,10 +118,7 @@ class QuotaManager:
 
         if new_value < 0:
             # Prevent negative counters
-            logger.warning(
-                "Quota counter went negative: tenant=%s resource=%s",
-                tenant_id, resource
-            )
+            logger.warning("Quota counter went negative: tenant=%s resource=%s", tenant_id, resource)
             self._redis.set(key, 0)
 
     def get_usage(self, tenant_id: str, resource: str) -> int:

@@ -106,18 +106,18 @@ class KnowledgeRetrievalMiddleware(AgentMiddleware[ThreadState]):
         Removes punctuation, normalizes whitespace, and extracts key terms.
         """
         # Remove excessive punctuation
-        query = re.sub(r'[!?]+', '', query)
+        query = re.sub(r"[!?]+", "", query)
 
         # Normalize whitespace
-        query = ' '.join(query.split())
+        query = " ".join(query.split())
 
         # Remove stop words for search (simple version)
-        stop_words = {'what', 'is', 'the', 'a', 'an', 'how', 'to', 'do', 'i', 'you', 'tell', 'me', 'about'}
+        stop_words = {"what", "is", "the", "a", "an", "how", "to", "do", "i", "you", "tell", "me", "about"}
         words = query.lower().split()
         key_words = [w for w in words if w not in stop_words]
 
         if key_words:
-            return ' '.join(key_words)
+            return " ".join(key_words)
 
         return query
 
@@ -135,10 +135,7 @@ class KnowledgeRetrievalMiddleware(AgentMiddleware[ThreadState]):
             # Rewrite query for better retrieval
             search_query = self._rewrite_query(query)
 
-            logger.debug(
-                "Retrieving knowledge: query='%s', search='%s', tenant=%s",
-                query[:50], search_query[:50], tenant_id
-            )
+            logger.debug("Retrieving knowledge: query='%s', search='%s', tenant=%s", query[:50], search_query[:50], tenant_id)
 
             # Search knowledge base
             chunks = await kb.search(
@@ -146,10 +143,7 @@ class KnowledgeRetrievalMiddleware(AgentMiddleware[ThreadState]):
                 tenant_id=tenant_id,
             )
 
-            logger.info(
-                "Retrieved %d knowledge chunks for query: %s",
-                len(chunks), query[:50]
-            )
+            logger.info("Retrieved %d knowledge chunks for query: %s", len(chunks), query[:50])
 
             return chunks
 
@@ -204,6 +198,7 @@ class KnowledgeRetrievalMiddleware(AgentMiddleware[ThreadState]):
 
         # Retrieve knowledge (sync version uses asyncio.run)
         import asyncio
+
         try:
             tenant_id = self._get_tenant_id()
             chunks = asyncio.run(self._retrieve_knowledge(query, tenant_id))

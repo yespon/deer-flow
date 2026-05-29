@@ -12,7 +12,7 @@ from langgraph.prebuilt.tool_node import ToolCallRequest
 from langgraph.types import Command
 
 from deerflow.agents.thread_state import ThreadState
-from deerflow.enterprise.quota import QuotaManager, QuotaExceededError
+from deerflow.enterprise.quota import QuotaExceededError, QuotaManager
 from deerflow.enterprise.quota_config import QuotaConfig
 from deerflow.enterprise.tenancy import get_current_tenant
 
@@ -72,10 +72,7 @@ class QuotaMiddleware(AgentMiddleware[ThreadState]):
         tool_name = request.tool_call.get("name", "unknown")
 
         content = (
-            f"❌ Quota Exceeded\n\n"
-            f"Cannot execute '{tool_name}': sandbox quota exceeded.\n"
-            f"Current usage: {error.current}/{error.limit} concurrent sandboxes.\n\n"
-            f"Please wait for existing operations to complete or contact your administrator."
+            f"❌ Quota Exceeded\n\nCannot execute '{tool_name}': sandbox quota exceeded.\nCurrent usage: {error.current}/{error.limit} concurrent sandboxes.\n\nPlease wait for existing operations to complete or contact your administrator."
         )
 
         return ToolMessage(
@@ -103,9 +100,7 @@ class QuotaMiddleware(AgentMiddleware[ThreadState]):
         limit = self._get_quota_limit()
 
         # Try to acquire quota
-        acquired = self._quota_manager.acquire(
-            tenant_id, "concurrent_sandboxes", limit=limit
-        )
+        acquired = self._quota_manager.acquire(tenant_id, "concurrent_sandboxes", limit=limit)
 
         if not acquired:
             # Build error from current usage
@@ -141,9 +136,7 @@ class QuotaMiddleware(AgentMiddleware[ThreadState]):
         tenant_id = self._get_tenant_id()
         limit = self._get_quota_limit()
 
-        acquired = self._quota_manager.acquire(
-            tenant_id, "concurrent_sandboxes", limit=limit
-        )
+        acquired = self._quota_manager.acquire(tenant_id, "concurrent_sandboxes", limit=limit)
 
         if not acquired:
             current = self._quota_manager.get_usage(tenant_id, "concurrent_sandboxes")

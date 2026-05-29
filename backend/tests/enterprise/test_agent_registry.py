@@ -1,9 +1,6 @@
 """Tests for AgentRegistry."""
 
-import pytest
-
 from deerflow.enterprise.agent_registry import (
-    AgentInstance,
     AgentRegistry,
     AgentType,
     get_agent_registry,

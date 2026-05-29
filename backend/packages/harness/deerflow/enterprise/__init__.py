@@ -1,124 +1,98 @@
 """DeerFlow Enterprise - Multi-tenancy, RBAC, and Audit infrastructure."""
 
-from deerflow.enterprise.tenancy import (
-    AUTO,
-    Tenant,
-    get_current_tenant,
-    require_current_tenant,
-    reset_current_tenant,
-    resolve_tenant_id,
-    set_current_tenant,
-    tenant_context,
-)
-from deerflow.enterprise.tenant_config import (
-    TenantConfig,
-    TenancyConfig,
-)
-from deerflow.enterprise.isolation import (
-    TenantNamespace,
-    get_tenant_prefix,
-)
-from deerflow.enterprise.rbac import (
-    RBACEngine,
-    Role,
-    check_permission,
-    require_permission,
-)
-from deerflow.enterprise.rbac_config import RBACConfig
-from deerflow.enterprise.audit import (
-    AuditEvent,
-    AuditEventType,
-    AuditSigner,
-    ImmutableAuditLog,
-)
-from deerflow.enterprise.audit_config import AuditConfig
-from deerflow.enterprise.quota import (
-    QuotaExceededError,
-    QuotaManager,
-)
-from deerflow.enterprise.quota_config import (
-    QuotaConfig,
-    TenantQuota,
-)
-from deerflow.enterprise.approval import (
-    ApprovalRule,
-    ApprovalRuleEngine,
-    ApprovalRequest,
-    ApprovalStatus,
-    get_approval_engine,
-)
-from deerflow.enterprise.approval_state import (
-    ApprovalStateManager,
-    SuspendedState,
-    get_state_manager,
-)
-from deerflow.enterprise.approval_config import (
-    ApprovalConfig,
-    ApprovalNotificationsConfig,
-)
-from deerflow.enterprise.approval_middleware import (
-    ApprovalMiddleware,
-    ApprovalPendingError,
-)
-from deerflow.enterprise.agent_registry import (
-    AgentInstance,
-    AgentRegistry,
-    AgentType,
-    get_agent_registry,
-)
-from deerflow.enterprise.agent_team_orchestrator import (
-    AgentTeamOrchestrator,
-    SubTaskResult,
-    TeamExecutionResult,
-)
-from deerflow.enterprise.task_decomposer import (
-    ExecutionPlan,
-    SubTask,
-    TaskDecomposer,
-)
-from deerflow.enterprise.knowledge_config import (
-    ChunkingConfig,
-    EmbeddingConfig,
-    KnowledgeBaseConfig,
-    RetrievalConfig,
-    VectorStoreConfig,
-)
-from deerflow.enterprise.knowledge_base import (
-    ChunkingStrategy,
-    CorporateKnowledgeBase,
-    DocumentChunk,
-    KnowledgeConnector,
-    KnowledgeDocument,
-    SyncResult,
-)
-from deerflow.enterprise.knowledge_retrieval_middleware import (
-    KnowledgeRetrievalMiddleware,
-)
-from deerflow.enterprise.enterprise_sandbox import (
-    AuditedSandbox,
-    AuditSandboxEventType,
-    EnterpriseSandboxProvider,
-)
-from deerflow.enterprise.brand_controller import (
-    BrandController,
-    BrandGuidelines,
-    BrandIssue,
-    BrandReviewResult,
-)
-from deerflow.enterprise.compliance_filter import (
-    ComplianceFilter,
-    ComplianceRule,
-    ContentType,
-    FilterResult,
-    PolicyRule,
-    SensitiveWordRule,
-    Violation,
-)
-from deerflow.enterprise.compliance_config import (
-    BrandConfig,
-    ComplianceConfig,
-    ComplianceRuleConfig,
-)
+from importlib import import_module
+
+_EXPORTS: dict[str, tuple[str, str]] = {
+    "AUTO": ("deerflow.enterprise.tenancy", "AUTO"),
+    "Tenant": ("deerflow.enterprise.tenancy", "Tenant"),
+    "get_current_tenant": ("deerflow.enterprise.tenancy", "get_current_tenant"),
+    "require_current_tenant": ("deerflow.enterprise.tenancy", "require_current_tenant"),
+    "reset_current_tenant": ("deerflow.enterprise.tenancy", "reset_current_tenant"),
+    "resolve_tenant_id": ("deerflow.enterprise.tenancy", "resolve_tenant_id"),
+    "set_current_tenant": ("deerflow.enterprise.tenancy", "set_current_tenant"),
+    "tenant_context": ("deerflow.enterprise.tenancy", "tenant_context"),
+    "TenantConfig": ("deerflow.enterprise.tenant_config", "TenantConfig"),
+    "TenancyConfig": ("deerflow.enterprise.tenant_config", "TenancyConfig"),
+    "TenantNamespace": ("deerflow.enterprise.isolation", "TenantNamespace"),
+    "get_tenant_prefix": ("deerflow.enterprise.isolation", "get_tenant_prefix"),
+    "RBACEngine": ("deerflow.enterprise.rbac", "RBACEngine"),
+    "Role": ("deerflow.enterprise.rbac", "Role"),
+    "check_permission": ("deerflow.enterprise.rbac", "check_permission"),
+    "require_permission": ("deerflow.enterprise.rbac", "require_permission"),
+    "RBACConfig": ("deerflow.enterprise.rbac_config", "RBACConfig"),
+    "AuditEvent": ("deerflow.enterprise.audit", "AuditEvent"),
+    "AuditEventType": ("deerflow.enterprise.audit", "AuditEventType"),
+    "AuditSigner": ("deerflow.enterprise.audit", "AuditSigner"),
+    "ImmutableAuditLog": ("deerflow.enterprise.audit", "ImmutableAuditLog"),
+    "AuditConfig": ("deerflow.enterprise.audit_config", "AuditConfig"),
+    "QuotaExceededError": ("deerflow.enterprise.quota", "QuotaExceededError"),
+    "QuotaManager": ("deerflow.enterprise.quota", "QuotaManager"),
+    "QuotaConfig": ("deerflow.enterprise.quota_config", "QuotaConfig"),
+    "TenantQuota": ("deerflow.enterprise.quota_config", "TenantQuota"),
+    "ApprovalRule": ("deerflow.enterprise.approval", "ApprovalRule"),
+    "ApprovalRuleEngine": ("deerflow.enterprise.approval", "ApprovalRuleEngine"),
+    "ApprovalRequest": ("deerflow.enterprise.approval", "ApprovalRequest"),
+    "ApprovalStatus": ("deerflow.enterprise.approval", "ApprovalStatus"),
+    "get_approval_engine": ("deerflow.enterprise.approval", "get_approval_engine"),
+    "ApprovalStateManager": ("deerflow.enterprise.approval_state", "ApprovalStateManager"),
+    "SuspendedState": ("deerflow.enterprise.approval_state", "SuspendedState"),
+    "get_state_manager": ("deerflow.enterprise.approval_state", "get_state_manager"),
+    "ApprovalConfig": ("deerflow.enterprise.approval_config", "ApprovalConfig"),
+    "ApprovalNotificationsConfig": ("deerflow.enterprise.approval_config", "ApprovalNotificationsConfig"),
+    "ApprovalMiddleware": ("deerflow.enterprise.approval_middleware", "ApprovalMiddleware"),
+    "ApprovalPendingError": ("deerflow.enterprise.approval_middleware", "ApprovalPendingError"),
+    "AgentInstance": ("deerflow.enterprise.agent_registry", "AgentInstance"),
+    "AgentRegistry": ("deerflow.enterprise.agent_registry", "AgentRegistry"),
+    "AgentType": ("deerflow.enterprise.agent_registry", "AgentType"),
+    "get_agent_registry": ("deerflow.enterprise.agent_registry", "get_agent_registry"),
+    "AgentTeamOrchestrator": ("deerflow.enterprise.agent_team_orchestrator", "AgentTeamOrchestrator"),
+    "SubTaskResult": ("deerflow.enterprise.agent_team_orchestrator", "SubTaskResult"),
+    "TeamExecutionResult": ("deerflow.enterprise.agent_team_orchestrator", "TeamExecutionResult"),
+    "ExecutionPlan": ("deerflow.enterprise.task_decomposer", "ExecutionPlan"),
+    "SubTask": ("deerflow.enterprise.task_decomposer", "SubTask"),
+    "TaskDecomposer": ("deerflow.enterprise.task_decomposer", "TaskDecomposer"),
+    "ChunkingConfig": ("deerflow.enterprise.knowledge_config", "ChunkingConfig"),
+    "EmbeddingConfig": ("deerflow.enterprise.knowledge_config", "EmbeddingConfig"),
+    "KnowledgeBaseConfig": ("deerflow.enterprise.knowledge_config", "KnowledgeBaseConfig"),
+    "RetrievalConfig": ("deerflow.enterprise.knowledge_config", "RetrievalConfig"),
+    "VectorStoreConfig": ("deerflow.enterprise.knowledge_config", "VectorStoreConfig"),
+    "ChunkingStrategy": ("deerflow.enterprise.knowledge_base", "ChunkingStrategy"),
+    "CorporateKnowledgeBase": ("deerflow.enterprise.knowledge_base", "CorporateKnowledgeBase"),
+    "DocumentChunk": ("deerflow.enterprise.knowledge_base", "DocumentChunk"),
+    "KnowledgeConnector": ("deerflow.enterprise.knowledge_base", "KnowledgeConnector"),
+    "KnowledgeDocument": ("deerflow.enterprise.knowledge_base", "KnowledgeDocument"),
+    "SyncResult": ("deerflow.enterprise.knowledge_base", "SyncResult"),
+    "KnowledgeRetrievalMiddleware": ("deerflow.enterprise.knowledge_retrieval_middleware", "KnowledgeRetrievalMiddleware"),
+    "EnterpriseSandboxProvider": ("deerflow.enterprise.enterprise_sandbox", "EnterpriseSandboxProvider"),
+    "AuditedSandbox": ("deerflow.enterprise.enterprise_sandbox", "AuditedSandbox"),
+    "AuditSandboxEventType": ("deerflow.enterprise.enterprise_sandbox", "AuditSandboxEventType"),
+    "BrandController": ("deerflow.enterprise.brand_controller", "BrandController"),
+    "BrandGuidelines": ("deerflow.enterprise.brand_controller", "BrandGuidelines"),
+    "BrandIssue": ("deerflow.enterprise.brand_controller", "BrandIssue"),
+    "BrandReviewResult": ("deerflow.enterprise.brand_controller", "BrandReviewResult"),
+    "ComplianceFilter": ("deerflow.enterprise.compliance_filter", "ComplianceFilter"),
+    "ComplianceRule": ("deerflow.enterprise.compliance_filter", "ComplianceRule"),
+    "ContentType": ("deerflow.enterprise.compliance_filter", "ContentType"),
+    "FilterResult": ("deerflow.enterprise.compliance_filter", "FilterResult"),
+    "PolicyRule": ("deerflow.enterprise.compliance_filter", "PolicyRule"),
+    "SensitiveWordRule": ("deerflow.enterprise.compliance_filter", "SensitiveWordRule"),
+    "Violation": ("deerflow.enterprise.compliance_filter", "Violation"),
+    "BrandConfig": ("deerflow.enterprise.compliance_config", "BrandConfig"),
+    "ComplianceConfig": ("deerflow.enterprise.compliance_config", "ComplianceConfig"),
+    "ComplianceRuleConfig": ("deerflow.enterprise.compliance_config", "ComplianceRuleConfig"),
+}
+
+
+def __getattr__(name: str):
+    target = _EXPORTS.get(name)
+    if target is None:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+    module_name, attr_name = target
+    value = getattr(import_module(module_name), attr_name)
+    globals()[name] = value
+    return value
+
 
 __all__ = [
     # Tenancy

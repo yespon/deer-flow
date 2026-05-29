@@ -1,7 +1,8 @@
 """Tests for QuotaManager with Redis counters."""
 
-import pytest
 from unittest.mock import Mock
+
+import pytest
 
 from deerflow.enterprise.quota import QuotaExceededError, QuotaManager
 

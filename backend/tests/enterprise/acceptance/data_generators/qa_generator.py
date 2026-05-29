@@ -26,8 +26,10 @@ class QAGenerator:
 
     def _generate_for_document(self, doc) -> list[QAPair]:
         # Simple extraction - in production, use LLM
-        return [QAPair(
-            question=f"Tell me about {doc.title}",
-            expected_answer=doc.content[:200],
-            relevant_doc_ids=[doc.doc_id],
-        )]
+        return [
+            QAPair(
+                question=f"Tell me about {doc.title}",
+                expected_answer=doc.content[:200],
+                relevant_doc_ids=[doc.doc_id],
+            )
+        ]

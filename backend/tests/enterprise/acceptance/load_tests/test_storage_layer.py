@@ -47,7 +47,7 @@ class TestStorageLayerLoad:
         latencies = [lat for lat, _ in results if lat is not None]
         avg_latency = sum(latencies) / len(latencies) if latencies else 0
 
-        print(f"\nRedis counter ops - Avg latency: {avg_latency*1000:.2f}ms")
+        print(f"\nRedis counter ops - Avg latency: {avg_latency * 1000:.2f}ms")
 
         # Simulated operations should be fast
         assert avg_latency < 0.050, f"Redis latency {avg_latency}s exceeds 50ms"
@@ -80,7 +80,7 @@ class TestStorageLayerLoad:
 
         avg_latency = sum(latencies) / len(latencies)
 
-        print(f"\nNamespace ops - Avg latency: {avg_latency*1000:.2f}ms")
+        print(f"\nNamespace ops - Avg latency: {avg_latency * 1000:.2f}ms")
 
         # Namespace operations are local and should be very fast
         assert avg_latency < 0.010, f"Namespace latency {avg_latency}s exceeds 10ms"
@@ -104,7 +104,7 @@ class TestStorageLayerLoad:
                 results = await kb.search(query, tenant_id=tenant_id, top_k=5)
                 elapsed = time.perf_counter() - start
                 return elapsed, len(results)
-            except Exception as e:
+            except Exception:
                 elapsed = time.perf_counter() - start
                 return elapsed, 0
 
@@ -115,7 +115,7 @@ class TestStorageLayerLoad:
         latencies = [lat for lat, _ in results if lat is not None]
         avg_latency = sum(latencies) / len(latencies) if latencies else 0
 
-        print(f"\nVector search - Avg latency: {avg_latency*1000:.2f}ms")
+        print(f"\nVector search - Avg latency: {avg_latency * 1000:.2f}ms")
 
         # Vector search should be reasonably fast
         assert avg_latency < 0.500, f"Vector search latency {avg_latency}s exceeds 500ms"

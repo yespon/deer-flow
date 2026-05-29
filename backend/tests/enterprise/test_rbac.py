@@ -3,7 +3,6 @@
 import pytest
 
 from deerflow.enterprise.rbac import (
-    DEFAULT_CASBIN_MODEL,
     RBACEngine,
     Role,
     check_permission,
@@ -132,6 +131,4 @@ class TestInitializeDefaultPolicies:
         initialize_default_policies(engine, tenant_id="default")
 
         # TENANT_ADMIN should have all permissions
-        assert engine.check_permission(
-            "admin_user", "default", "agent", "admin"
-        )
+        assert engine.check_permission("admin_user", "default", "agent", "admin")

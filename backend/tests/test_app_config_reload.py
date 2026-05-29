@@ -140,6 +140,27 @@ def test_app_config_defaults_empty_database_to_sqlite(tmp_path, monkeypatch):
     assert config.database.sqlite_dir == ".deer-flow/data"
 
 
+def test_app_config_treats_null_models_as_empty_list(tmp_path, monkeypatch):
+    config_path = tmp_path / "config.yaml"
+    extensions_path = tmp_path / "extensions_config.json"
+    _write_extensions_config(extensions_path)
+    config_path.write_text(
+        yaml.safe_dump(
+            {
+                "models": None,
+                "sandbox": {"use": "deerflow.sandbox.local:LocalSandboxProvider"},
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    monkeypatch.setenv("DEER_FLOW_EXTENSIONS_CONFIG_PATH", str(extensions_path))
+
+    config = AppConfig.from_file(str(config_path))
+
+    assert config.models == []
+
+
 def test_get_app_config_reloads_when_file_changes(tmp_path, monkeypatch):
     config_path = tmp_path / "config.yaml"
     extensions_path = tmp_path / "extensions_config.json"

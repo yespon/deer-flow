@@ -3,7 +3,7 @@
 import pytest
 from pydantic import ValidationError
 
-from deerflow.enterprise.tenant_config import TenantConfig, TenancyConfig
+from deerflow.enterprise.tenant_config import TenancyConfig, TenantConfig
 
 
 class TestTenantConfig:
