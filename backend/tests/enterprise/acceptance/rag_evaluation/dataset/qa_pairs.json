@@ -1,0 +1,62 @@
+[
+  {
+    "question": "What is the refund policy?",
+    "expected_answer": "Full refund within 30 days of purchase",
+    "relevant_doc_ids": ["doc_refund_policy_001"],
+    "category": "hr_policies"
+  },
+  {
+    "question": "How do I reset my password?",
+    "expected_answer": "Go to Settings > Security > Change Password",
+    "relevant_doc_ids": ["doc_it_support_001"],
+    "category": "it_support"
+  },
+  {
+    "question": "What are the working hours?",
+    "expected_answer": "Core hours are 10am-4pm, flexible otherwise",
+    "relevant_doc_ids": ["doc_hr_policies_002"],
+    "category": "hr_policies"
+  },
+  {
+    "question": "How do I request time off?",
+    "expected_answer": "Submit a request through the HR portal at least 2 weeks in advance",
+    "relevant_doc_ids": ["doc_hr_policies_003"],
+    "category": "hr_policies"
+  },
+  {
+    "question": "What is the dress code?",
+    "expected_answer": "Business casual Monday-Thursday, casual Friday",
+    "relevant_doc_ids": ["doc_hr_policies_004"],
+    "category": "hr_policies"
+  },
+  {
+    "question": "How do I connect to the VPN?",
+    "expected_answer": "Use the Cisco AnyConnect client with your company credentials",
+    "relevant_doc_ids": ["doc_it_support_002"],
+    "category": "it_support"
+  },
+  {
+    "question": "What are the expense reimbursement procedures?",
+    "expected_answer": "Submit receipts through Concur within 30 days",
+    "relevant_doc_ids": ["doc_hr_policies_005"],
+    "category": "hr_policies"
+  },
+  {
+    "question": "How do I access my email from home?",
+    "expected_answer": "Use webmail.company.com or configure Outlook with VPN",
+    "relevant_doc_ids": ["doc_it_support_003"],
+    "category": "it_support"
+  },
+  {
+    "question": "What is the parental leave policy?",
+    "expected_answer": "12 weeks paid leave for primary caregiver, 4 weeks for secondary",
+    "relevant_doc_ids": ["doc_hr_policies_006"],
+    "category": "hr_policies"
+  },
+  {
+    "question": "How do I report a security incident?",
+    "expected_answer": "Email security@company.com or call the hotline immediately",
+    "relevant_doc_ids": ["doc_it_support_004"],
+    "category": "it_support"
+  }
+]
