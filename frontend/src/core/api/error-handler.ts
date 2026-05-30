@@ -2,11 +2,17 @@
 
 import { toast } from "sonner";
 
+/** Standardized API error structure returned by the backend. */
 export interface APIError {
+  /** Error code identifier (e.g., "RATE_LIMIT_EXCEEDED") */
   code: string;
+  /** Human-readable error message */
   message: string;
+  /** Additional error details, varies by error type */
   details?: Record<string, unknown>;
+  /** Unique request ID for debugging */
   request_id: string;
+  /** ISO timestamp when the error occurred */
   timestamp: string;
 }
 
@@ -22,23 +28,28 @@ const ERROR_MESSAGES: Record<string, string> = {
   INTERNAL_ERROR: "服务器内部错误，请稍后重试",
 };
 
+/**
+ * Handle API errors with user-friendly toast notifications and specific actions.
+ * @param error - The API error to handle
+ */
 export function handleAPIError(error: APIError): void {
   // Log for debugging
   console.error(`[${error.request_id}] ${error.code}: ${error.message}`);
 
-  // Show user-friendly toast
-  const userMessage = ERROR_MESSAGES[error.code] ?? error.message;
-  toast.error(userMessage);
-
   // Handle specific errors
   switch (error.code) {
     case "THREAD_NOT_FOUND":
+      // Show user-friendly toast
+      toast.error(ERROR_MESSAGES[error.code] ?? error.message);
       // Redirect to new chat
       window.location.href = "/workspace/chats/new";
       break;
 
     case "RATE_LIMIT_EXCEEDED": {
-      const retryAfter = (error.details?.retry_after as number) || 60;
+      const retryAfter =
+        typeof error.details?.retry_after === "number"
+          ? error.details.retry_after
+          : 60;
       toast.error(`请求过于频繁，请 ${retryAfter} 秒后重试`);
       break;
     }
@@ -46,14 +57,28 @@ export function handleAPIError(error: APIError): void {
     case "INTERNAL_ERROR":
       // Could send to error tracking service
       // reportError(error);
+      // Show user-friendly toast
+      toast.error(ERROR_MESSAGES[error.code] ?? error.message);
+      break;
+
+    default:
+      // Show user-friendly toast for other errors
+      toast.error(ERROR_MESSAGES[error.code] ?? error.message);
       break;
   }
 }
 
+/** Wrapper for API error responses. */
 export interface APIErrorResponse {
+  /** The API error details */
   error: APIError;
 }
 
+/**
+ * Check if an unknown value is an APIErrorResponse.
+ * @param error - The value to check
+ * @returns True if the value is an APIErrorResponse
+ */
 export function isAPIError(error: unknown): error is APIErrorResponse {
   return (
     typeof error === "object" &&
@@ -62,26 +87,4 @@ export function isAPIError(error: unknown): error is APIErrorResponse {
     typeof (error as { error: unknown }).error === "object" &&
     "code" in (error as { error: { code: unknown } }).error
   );
-}
-
-// Fetch wrapper with error handling
-export async function fetchWithErrorHandling(
-  url: string,
-  options?: RequestInit,
-): Promise<Response> {
-  const response = await fetch(url, options);
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => null);
-
-    if (isAPIError(errorData)) {
-      handleAPIError(errorData.error);
-      throw new Error(errorData.error.message);
-    }
-
-    // Fallback for non-standard errors
-    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-  }
-
-  return response;
 }
