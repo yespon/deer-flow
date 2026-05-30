@@ -11,7 +11,7 @@ import json
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import func, select, update
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from deerflow.persistence.run.model import RunRow
@@ -179,8 +179,6 @@ class RunRepository(RunStore):
         user_id: str | None | _AutoSentinel = AUTO,
     ) -> int:
         """Delete all runs for a given thread. Returns the number of runs deleted."""
-        from sqlalchemy import delete
-
         resolved_user_id = resolve_user_id(user_id, method_name="RunRepository.delete_by_thread")
         async with self._sf() as session:
             stmt = delete(RunRow).where(RunRow.thread_id == thread_id)

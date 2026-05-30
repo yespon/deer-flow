@@ -364,7 +364,10 @@ class RunManager:
     async def delete_by_thread(self, thread_id: str, *, user_id: str | None = None) -> int:
         """Delete all runs for a given thread from memory and store.
 
-        Returns the number of runs deleted.
+        Returns the number of runs deleted. If a store is configured and deletion
+        succeeds, returns the store's count; otherwise returns the count of runs
+        removed from memory. The store count may differ from memory count if runs
+        were persisted across restarts.
         """
         # First, get list of run_ids to clean from memory
         async with self._lock:

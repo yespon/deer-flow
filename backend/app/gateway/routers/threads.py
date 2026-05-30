@@ -244,10 +244,13 @@ async def delete_thread_data(
         else:
             await checkpointer.adelete({"configurable": {"thread_id": thread_id}})
     except Exception:
-        logger.debug("Could not delete checkpoints for thread %s (not critical)", sanitize_log_param(thread_id))
+        logger.warning("Could not delete checkpoints for thread %s (not critical)", sanitize_log_param(thread_id))
 
-    # Step 3: Clean up local filesystem
-    response = _delete_thread_data(thread_id, user_id=get_effective_user_id())
+    # Step 3: Clean up local filesystem (if requested)
+    if cleanup_data:
+        response = _delete_thread_data(thread_id, user_id=get_effective_user_id())
+    else:
+        response = ThreadDeleteResponse(success=True, message="Thread deleted without local data cleanup")
 
     # Step 4: Clean up run records
     try:
