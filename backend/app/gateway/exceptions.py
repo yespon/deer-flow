@@ -1,4 +1,31 @@
-"""Unified API error handling."""
+"""Unified API error handling.
+
+This module provides a centralized exception handling system for the Gateway API.
+
+Error Response Schema:
+    All API errors follow a consistent JSON structure:
+
+    {
+        "error": {
+            "code": "ERROR_CODE",        // Machine-readable error identifier
+            "message": "Human readable description",
+            "details": {...},              // Optional error-specific data
+            "request_id": "uuid-prefix",   // For request tracing (8 chars)
+            "timestamp": "ISO-8601 UTC"    // When the error occurred
+        }
+    }
+
+Base Class:
+    APIError: Base exception class that all API errors inherit from.
+    Provides consistent attributes: code, message, status_code, details.
+
+Usage:
+    Raise specific error types in route handlers:
+        raise ThreadNotFoundError("thread-123")
+
+    The exception handlers (api_error_handler, generic_exception_handler)
+    automatically convert exceptions to the standard JSON response format.
+"""
 
 import time
 import uuid
@@ -92,15 +119,30 @@ class RateLimitExceededError(APIError):
         )
 
 
-async def api_error_handler(request: Request, exc: APIError) -> JSONResponse:
-    """Global API error handler."""
+def _build_error_response(
+    code: str,
+    message: str,
+    status_code: int,
+    details: dict[str, Any] | None = None,
+) -> JSONResponse:
+    """Build a standardized error response.
+
+    Args:
+        code: Machine-readable error code
+        message: Human-readable error message
+        status_code: HTTP status code
+        details: Optional error-specific details
+
+    Returns:
+        JSONResponse with standardized error structure
+    """
     return JSONResponse(
-        status_code=exc.status_code,
+        status_code=status_code,
         content={
             "error": {
-                "code": exc.code,
-                "message": exc.message,
-                "details": exc.details,
+                "code": code,
+                "message": message,
+                "details": details or {},
                 "request_id": str(uuid.uuid4())[:8],
                 "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
             }
@@ -108,17 +150,21 @@ async def api_error_handler(request: Request, exc: APIError) -> JSONResponse:
     )
 
 
+async def api_error_handler(request: Request, exc: APIError) -> JSONResponse:
+    """Global API error handler."""
+    return _build_error_response(
+        code=exc.code,
+        message=exc.message,
+        status_code=exc.status_code,
+        details=exc.details,
+    )
+
+
 async def generic_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     """Fallback handler for unexpected exceptions."""
-    return JSONResponse(
+    return _build_error_response(
+        code="INTERNAL_ERROR",
+        message="An unexpected error occurred",
         status_code=500,
-        content={
-            "error": {
-                "code": "INTERNAL_ERROR",
-                "message": "An unexpected error occurred",
-                "details": {},
-                "request_id": str(uuid.uuid4())[:8],
-                "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-            }
-        },
+        details={},
     )
