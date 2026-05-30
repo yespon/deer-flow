@@ -358,16 +358,23 @@ async def sse_consumer(
     record: RunRecord,
     request: Request,
     run_mgr: RunManager,
+    *,
+    last_event_id: str | None = None,
 ):
     """Async generator that yields SSE frames from the bridge.
 
     The ``finally`` block implements ``on_disconnect`` semantics:
     - ``cancel``: abort the background task on client disconnect.
     - ``continue``: let the task run; events are discarded.
+
+    Args:
+        last_event_id: Optional explicit last event ID to resume from.
+            If not provided, falls back to request.headers.get("Last-Event-ID").
     """
-    last_event_id = request.headers.get("Last-Event-ID")
+    # Use explicit last_event_id if provided, otherwise fall back to header
+    effective_last_event_id = last_event_id or request.headers.get("Last-Event-ID")
     try:
-        async for entry in bridge.subscribe(record.run_id, last_event_id=last_event_id):
+        async for entry in bridge.subscribe(record.run_id, last_event_id=effective_last_event_id):
             if await request.is_disconnected():
                 break
 
