@@ -10,6 +10,11 @@ from app.gateway.auth_middleware import AuthMiddleware
 from app.gateway.config import get_gateway_config
 from app.gateway.csrf_middleware import CSRFMiddleware, get_configured_cors_origins
 from app.gateway.deps import langgraph_runtime
+from app.gateway.exceptions import (
+    APIError,
+    api_error_handler,
+    generic_exception_handler,
+)
 from app.gateway.routers import (
     agents,
     artifacts,
@@ -303,6 +308,10 @@ This gateway provides runtime endpoints for agent runs plus custom endpoints for
             },
         ],
     )
+
+    # Register exception handlers
+    app.add_exception_handler(APIError, api_error_handler)
+    app.add_exception_handler(Exception, generic_exception_handler)
 
     # Auth: reject unauthenticated requests to non-public paths (fail-closed safety net)
     app.add_middleware(AuthMiddleware)

@@ -181,3 +181,15 @@ def test_error_response_structure(client):
     assert "error" in data
     error = data["error"]
     assert all(key in error for key in ["code", "message", "details", "request_id", "timestamp"])
+
+
+def test_global_exception_handler_registered():
+    """Verify exception handlers are properly registered."""
+    from app.gateway.app import create_app
+
+    app = create_app()
+
+    # Check that exception handlers are registered
+    # FastAPI stores handlers in app.exception_handlers dict
+    assert APIError in app.exception_handlers
+    assert Exception in app.exception_handlers
