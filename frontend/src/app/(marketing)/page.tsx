@@ -802,7 +802,7 @@ function Footer() {
         {/* Bottom */}
         <div className="flex flex-col items-center justify-between border-t border-gray-200 pt-8 md:flex-row">
           <p className="text-sm text-gray-500">
-            © 2024 Prism. All rights reserved.
+            © 2026 Prism. All rights reserved.
           </p>
           <div className="mt-4 flex items-center gap-4 md:mt-0">
             <Link
