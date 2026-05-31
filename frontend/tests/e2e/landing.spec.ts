@@ -6,15 +6,13 @@ test.describe("Landing page", () => {
   test("renders the header and hero section", async ({ page }) => {
     await page.goto("/");
 
-    // Header brand name
+    // Header brand name (Prism logo text)
     await expect(
-      page.locator("header h1", { hasText: "DeerFlow" }),
+      page.locator("header span", { hasText: "Prism" }),
     ).toBeVisible();
 
-    // "Get Started" call-to-action button in hero
-    await expect(
-      page.getByRole("link", { name: /get started/i }),
-    ).toBeVisible();
+    // "启动 Agent" call-to-action button in hero
+    await expect(page.getByRole("link", { name: /启动 Agent/i })).toBeVisible();
   });
 
   test("Get Started link navigates to workspace", async ({ page }) => {
@@ -22,11 +20,11 @@ test.describe("Landing page", () => {
 
     await page.goto("/");
 
-    const getStarted = page.getByRole("link", { name: /get started/i });
+    const getStarted = page.getByRole("link", { name: /启动 Agent/i });
     await getStarted.click();
 
-    // Should redirect to /workspace/chats/new
-    await page.waitForURL("**/workspace/chats/new");
-    await expect(page).toHaveURL(/\/workspace\/chats\/new/);
+    // Should redirect to /login (for unauthenticated users)
+    await page.waitForURL("**/login");
+    await expect(page).toHaveURL(/\/login/);
   });
 });

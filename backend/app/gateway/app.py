@@ -21,6 +21,7 @@ from app.gateway.routers import (
     assistants_compat,
     auth,
     channels,
+    dashboard,
     feedback,
     health,
     mcp,
@@ -387,6 +388,9 @@ This gateway provides runtime endpoints for agent runs plus custom endpoints for
 
     # Health API is mounted at /api/health
     app.include_router(health.router)
+
+    # Dashboard API is mounted at /api/dashboard
+    app.include_router(dashboard.router)
 
     @app.get("/health", tags=["health"])
     async def health_check() -> dict[str, str]:

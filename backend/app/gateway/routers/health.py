@@ -67,8 +67,8 @@ async def check_memory_store_health() -> None:
 
 async def check_database_health(request: Request) -> None:
     """Check database/checkpointer availability."""
-    # Try to get checkpointer from request state
-    checkpointer = getattr(request.state, "checkpointer", None)
+    # Try to get checkpointer from app state (set during lifespan)
+    checkpointer = getattr(request.app.state, "checkpointer", None)
     if checkpointer is None:
         raise RuntimeError("Checkpointer not available")
 
