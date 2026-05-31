@@ -189,3 +189,40 @@ up:
 # Stop and remove production containers
 down:
 	@$(RUN_WITH_GIT_BASH) ./scripts/deploy.sh down
+
+# ==========================================
+# Acceptance Test Commands
+# ==========================================
+
+.PHONY: test-acceptance test-acceptance-ci test-acceptance-load test-acceptance-rag test-acceptance-all
+
+# Run all acceptance tests
+test-acceptance-all:
+	@echo "Running all acceptance tests..."
+	@cd backend && ./.venv/bin/python -m pytest tests/enterprise/acceptance/ -v --tb=short
+
+# Run CI integration tests (fast, no external deps)
+test-acceptance-ci:
+	@echo "Running CI integration tests..."
+	@cd backend && ./.venv/bin/python -m pytest tests/enterprise/acceptance/ci_tests/ -v --tb=short
+
+# Run load tests (may be slow)
+test-acceptance-load:
+	@echo "Running load tests..."
+	@cd backend && ./.venv/bin/python -m pytest tests/enterprise/acceptance/load_tests/ -v --tb=short
+
+# Run RAG accuracy tests
+test-acceptance-rag:
+	@echo "Running RAG accuracy tests..."
+	@cd backend && ./.venv/bin/python -m pytest tests/enterprise/acceptance/rag_evaluation/ -v --tb=short
+
+# Run acceptance tests in Docker
+test-acceptance-docker:
+	@echo "Running acceptance tests in Docker..."
+	docker-compose -f docker-compose.acceptance.yml up --abort-on-container-exit
+
+# Start Locust load testing UI
+test-acceptance-locust:
+	@echo "Starting Locust load testing UI on http://localhost:8089"
+	@cd backend && ./.venv/bin/python -m locust -f tests/enterprise/acceptance/load_tests/locustfile.py --host http://localhost:8001
+

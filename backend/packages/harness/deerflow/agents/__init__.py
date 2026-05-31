@@ -1,13 +1,20 @@
-from .factory import create_deerflow_agent
 from .features import Next, Prev, RuntimeFeatures
-from .lead_agent import make_lead_agent
-from .lead_agent.prompt import prime_enabled_skills_cache
 from .thread_state import SandboxState, ThreadState
 
-# LangGraph imports deerflow.agents when registering the graph. Prime the
-# enabled-skills cache here so the request path can usually read a warm cache
-# without forcing synchronous filesystem work during prompt module import.
-prime_enabled_skills_cache()
+
+def __getattr__(name: str):
+    if name == "create_deerflow_agent":
+        from .factory import create_deerflow_agent
+
+        return create_deerflow_agent
+    if name == "make_lead_agent":
+        from .lead_agent import make_lead_agent
+        from .lead_agent.prompt import prime_enabled_skills_cache
+
+        prime_enabled_skills_cache()
+        return make_lead_agent
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
 
 __all__ = [
     "create_deerflow_agent",

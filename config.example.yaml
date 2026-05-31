@@ -1190,3 +1190,158 @@ run_events:
 #   failure_threshold: 5
 #   # Time in seconds before attempting to recover (default: 60)
 #   recovery_timeout_sec: 60
+
+# ============================================================================
+# Enterprise Configuration
+# ============================================================================
+# Multi-tenancy, RBAC, and audit logging for enterprise deployments.
+# These features are disabled by default for single-tenant/community use.
+
+# tenancy:
+#   # Enable multi-tenancy (default: false)
+#   enabled: false
+#   # Default isolation mode for new tenants: "strict" or "relaxed"
+#   default_isolation_mode: relaxed
+#   # Tenant identification via HTTP header
+#   header_name: X-Tenant-ID
+#   # Domain pattern for tenant extraction (optional)
+#   # domain_pattern: "{tenant}.deerflow.com"
+#   # Pre-configured tenants
+#   tenants:
+#     - id: default
+#       name: Default Tenant
+#       plan: pro
+#       isolation_mode: relaxed
+#       max_agents: 10
+#       max_storage_gb: 100
+
+# rbac:
+#   # Enable RBAC (default: false)
+#   enabled: false
+#   # Path to custom Casbin model (optional)
+#   # model_config: ""
+#   # Path to policy CSV file (optional)
+#   # policy_file: ""
+
+# audit:
+#   # Enable audit logging (default: false)
+#   enabled: false
+#   # Audit log file path
+#   log_path: .deer-flow/audit.log
+#   # Path to Ed25519 private key (generated if not set)
+#   # private_key_path: ""
+#   # Include event payload in logs (default: true)
+#   include_payload: true
+
+# quota:
+#   # Enable quota management (default: false)
+#   enabled: false
+#   # Redis URL for distributed counters (default: redis://localhost:6379/0)
+#   # redis_url: "redis://localhost:6379/0"
+#   # Quota enforcement mode: "hard" (block) or "soft" (warn)
+#   enforcement_mode: hard
+#   # Default quotas for new tenants
+#   default_quotas:
+#     max_concurrent_sandboxes: 5
+#     max_cpu_cores: 4.0
+#     max_memory_gb: 8.0
+#     max_storage_gb: 100.0
+#     max_network_egress_mb: 1000
+
+# approval:
+#   # Enable Human-in-Loop approval workflow (default: false)
+#   enabled: false
+#   # Default timeout for approval requests in hours
+#   default_timeout_hours: 24
+#   # Storage path for suspended execution states
+#   storage_path: ".deer-flow/approvals"
+#   # Notification settings
+#   notifications:
+#     # Webhook URL for approval notifications (optional)
+#     # webhook_url: ""
+#     # Channels: "webhook", "email", "slack"
+#     channels: ["webhook"]
+
+# knowledge_base:
+#   # Enable Enterprise Knowledge Base and RAG (default: false)
+#   enabled: false
+#   # Vector store configuration
+#   vector_store:
+#     # Provider: "chroma", "pinecone", "weaviate", "qdrant", "milvus"
+#     provider: "chroma"
+#     # Collection name for storing document chunks
+#     collection_name: "deerflow_kb"
+#     # Connection settings (provider-specific)
+#     # For Chroma: local path or HTTP URL
+#     # connection_url: ".deer-flow/vector_store"
+#   # Embedding model configuration
+#   embedding:
+#     # Provider: "openai", "sentence_transformers", "cohere"
+#     provider: "openai"
+#     # Model name (provider-specific)
+#     model: "text-embedding-3-small"
+#     # API key for embedding service (if required)
+#     # api_key: $OPENAI_API_KEY
+#     # Embedding dimensions (if not auto-detected)
+#     # dimensions: 1536
+#   # Document chunking configuration
+#   chunking:
+#     # Strategy: "paragraphs", "fixed_size", "sentences"
+#     strategy: "paragraphs"
+#     # Chunk size in characters (for fixed_size strategy)
+#     chunk_size: 1000
+#     # Overlap between chunks in characters
+#     overlap: 100
+#   # Retrieval configuration
+#   retrieval:
+#     # Number of chunks to retrieve per query
+#     top_k: 5
+#     # Minimum similarity score (0.0 - 1.0)
+#     similarity_threshold: 0.7
+#     # Maximum context length for retrieved knowledge
+#     max_context_length: 4000
+
+# brand:
+#   # Enable brand compliance checking (default: false)
+#   enabled: false
+#   # Official brand name
+#   brand_name: "Acme Corp"
+#   # Forbidden words/phrases
+#   forbidden_words:
+#     - "competitor"
+#     - "badword"
+#   # Required disclaimers for marketing content
+#   required_disclaimers:
+#     - "Terms and conditions apply"
+#     - "Privacy policy"
+#   # Tone guidelines description
+#   tone_guidelines: "Professional and friendly, no slang"
+#   # Visual content standards
+#   visual_standards:
+#     min_width: 100
+#     min_height: 100
+
+# compliance:
+#   # Enable content compliance filtering (default: false)
+#   enabled: false
+#   # Global sensitive words list
+#   sensitive_words:
+#     - "secret"
+#     - "confidential"
+#     - "internal_only"
+#   # Policy rules for compliance checking
+#   policy_rules:
+#     - name: pii_detection
+#       rule_type: sensitive_words
+#       severity: block
+#       words:
+#         - "ssn"
+#         - "password"
+#         - "credit_card"
+#     - name: profanity_filter
+#       rule_type: sensitive_words
+#       severity: high
+#       words:
+#         - "badword"
+#   # Auto-review media content
+#   auto_review: true

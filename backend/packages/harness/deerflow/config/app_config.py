@@ -32,6 +32,13 @@ from deerflow.config.token_usage_config import TokenUsageConfig
 from deerflow.config.tool_config import ToolConfig, ToolGroupConfig
 from deerflow.config.tool_output_config import ToolOutputConfig
 from deerflow.config.tool_search_config import ToolSearchConfig, load_tool_search_config_from_dict
+from deerflow.enterprise.approval_config import ApprovalConfig
+from deerflow.enterprise.audit_config import AuditConfig
+from deerflow.enterprise.compliance_config import BrandConfig, ComplianceConfig
+from deerflow.enterprise.knowledge_config import KnowledgeBaseConfig
+from deerflow.enterprise.quota_config import QuotaConfig
+from deerflow.enterprise.rbac_config import RBACConfig
+from deerflow.enterprise.tenant_config import TenancyConfig
 
 load_dotenv()
 
@@ -112,6 +119,16 @@ class AppConfig(BaseModel):
     checkpointer: CheckpointerConfig | None = Field(default=None, description="Checkpointer configuration")
     stream_bridge: StreamBridgeConfig | None = Field(default=None, description="Stream bridge configuration")
 
+    # Enterprise configuration
+    tenancy: TenancyConfig = Field(default_factory=TenancyConfig, description="Multi-tenancy configuration")
+    rbac: RBACConfig = Field(default_factory=RBACConfig, description="RBAC configuration")
+    audit: AuditConfig = Field(default_factory=AuditConfig, description="Audit logging configuration")
+    quota: QuotaConfig = Field(default_factory=QuotaConfig, description="Quota management configuration")
+    approval: ApprovalConfig = Field(default_factory=ApprovalConfig, description="Human-in-Loop approval workflow configuration")
+    knowledge_base: KnowledgeBaseConfig = Field(default_factory=KnowledgeBaseConfig, description="Enterprise knowledge base and RAG configuration")
+    brand: BrandConfig = Field(default_factory=BrandConfig, description="Brand compliance configuration")
+    compliance: ComplianceConfig = Field(default_factory=ComplianceConfig, description="Content compliance filtering configuration")
+
     @classmethod
     def resolve_config_path(cls, config_path: str | None = None) -> Path:
         """Resolve the config file path.
@@ -158,6 +175,8 @@ class AppConfig(BaseModel):
         with open(resolved_path, encoding="utf-8") as f:
             config_data = yaml.safe_load(f) or {}
 
+        cls._normalize_nullable_defaults(config_data)
+
         # Check config version before processing
         cls._check_config_version(config_data, resolved_path)
 
@@ -176,6 +195,12 @@ class AppConfig(BaseModel):
         acp_agents = cls._validate_acp_agents(config_data.get("acp_agents", {}))
         cls._apply_singleton_configs(result, acp_agents)
         return result
+
+    @classmethod
+    def _normalize_nullable_defaults(cls, config_data: dict[str, Any]) -> None:
+        """Normalize template sections that YAML loads as null values."""
+        if config_data.get("models") is None:
+            config_data["models"] = []
 
     @classmethod
     def _validate_acp_agents(

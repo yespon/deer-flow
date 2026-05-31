@@ -257,8 +257,18 @@ async def cancel_run(
 
 @router.get("/{thread_id}/runs/{run_id}/join")
 @require_permission("runs", "read", owner_check=True)
-async def join_run(thread_id: str, run_id: str, request: Request) -> StreamingResponse:
-    """Join an existing run's SSE stream."""
+async def join_run(
+    thread_id: str,
+    run_id: str,
+    request: Request,
+    last_event_id: str | None = Query(default=None, description="Last received event ID for resuming the stream"),
+) -> StreamingResponse:
+    """Join an existing run's SSE stream.
+
+    To resume a stream after connection loss, provide ``last_event_id`` as a
+    query parameter (or use the ``Last-Event-ID`` header). The server will
+    replay events from that point before continuing with live events.
+    """
     run_mgr = get_run_manager(request)
     record = await run_mgr.get(run_id)
     if record is None or record.thread_id != thread_id:
@@ -268,7 +278,7 @@ async def join_run(thread_id: str, run_id: str, request: Request) -> StreamingRe
 
     bridge = get_stream_bridge(request)
     return StreamingResponse(
-        sse_consumer(bridge, record, request, run_mgr),
+        sse_consumer(bridge, record, request, run_mgr, last_event_id=last_event_id),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
@@ -291,6 +301,7 @@ async def stream_existing_run(
     request: Request,
     action: Literal["interrupt", "rollback"] | None = Query(default=None, description="Cancel action"),
     wait: int = Query(default=0, description="Block until cancelled (1) or return immediately (0)"),
+    last_event_id: str | None = Query(default=None, description="Last received event ID for resuming the stream"),
 ):
     """Join an existing run's SSE stream (GET), or cancel-then-stream (POST).
 
@@ -298,6 +309,10 @@ async def stream_existing_run(
     ``POST`` to this endpoint.  When ``action=interrupt`` or ``action=rollback``
     is present the run is cancelled first; the response then streams any
     remaining buffered events so the client observes a clean shutdown.
+
+    To resume a stream after connection loss, provide ``last_event_id`` as a
+    query parameter (or use the ``Last-Event-ID`` header). The server will
+    replay events from that point before continuing with live events.
     """
     run_mgr = get_run_manager(request)
     record = await run_mgr.get(run_id)
@@ -320,7 +335,7 @@ async def stream_existing_run(
 
     bridge = get_stream_bridge(request)
     return StreamingResponse(
-        sse_consumer(bridge, record, request, run_mgr),
+        sse_consumer(bridge, record, request, run_mgr, last_event_id=last_event_id),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",

@@ -10,6 +10,11 @@ from app.gateway.auth_middleware import AuthMiddleware
 from app.gateway.config import get_gateway_config
 from app.gateway.csrf_middleware import CSRFMiddleware, get_configured_cors_origins
 from app.gateway.deps import langgraph_runtime
+from app.gateway.exceptions import (
+    APIError,
+    api_error_handler,
+    generic_exception_handler,
+)
 from app.gateway.routers import (
     agents,
     artifacts,
@@ -17,6 +22,7 @@ from app.gateway.routers import (
     auth,
     channels,
     feedback,
+    health,
     mcp,
     memory,
     models,
@@ -310,6 +316,10 @@ This gateway provides runtime endpoints for agent runs plus custom endpoints for
         ],
     )
 
+    # Register exception handlers
+    app.add_exception_handler(APIError, api_error_handler)
+    app.add_exception_handler(Exception, generic_exception_handler)
+
     # Auth: reject unauthenticated requests to non-public paths (fail-closed safety net)
     app.add_middleware(AuthMiddleware)
 
@@ -374,6 +384,9 @@ This gateway provides runtime endpoints for agent runs plus custom endpoints for
 
     # Stateless Runs API (stream/wait without a pre-existing thread)
     app.include_router(runs.router)
+
+    # Health API is mounted at /api/health
+    app.include_router(health.router)
 
     @app.get("/health", tags=["health"])
     async def health_check() -> dict[str, str]:

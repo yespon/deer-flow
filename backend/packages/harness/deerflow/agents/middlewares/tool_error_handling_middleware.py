@@ -1,8 +1,10 @@
 """Tool error handling middleware and shared runtime middleware builders."""
 
+from __future__ import annotations
+
 import logging
 from collections.abc import Awaitable, Callable
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from langchain.agents import AgentState
 from langchain.agents.middleware import AgentMiddleware
@@ -11,7 +13,8 @@ from langgraph.errors import GraphBubbleUp
 from langgraph.prebuilt.tool_node import ToolCallRequest
 from langgraph.types import Command
 
-from deerflow.config.app_config import AppConfig
+if TYPE_CHECKING:
+    from deerflow.config.app_config import AppConfig
 
 logger = logging.getLogger(__name__)
 

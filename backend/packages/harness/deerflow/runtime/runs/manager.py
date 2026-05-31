@@ -645,6 +645,29 @@ class RunManager:
             self._runs.pop(run_id, None)
         logger.debug("Run record %s cleaned up", run_id)
 
+    async def delete_by_thread(self, thread_id: str, *, user_id: str | None = None) -> int:
+        """Delete all runs for a given thread from memory and store.
+
+        Returns the number of runs deleted. If a store is configured and deletion
+        succeeds, returns the store's count; otherwise returns the count of runs
+        removed from memory. The store count may differ from memory count if runs
+        were persisted across restarts.
+        """
+        # First, get list of run_ids to clean from memory
+        async with self._lock:
+            memory_run_ids = [run_id for run_id, r in self._runs.items() if r.thread_id == thread_id]
+            for run_id in memory_run_ids:
+                self._runs.pop(run_id, None)
+
+        # Then delete from store if available
+        if self._store is not None:
+            try:
+                return await self._store.delete_by_thread(thread_id, user_id=user_id)
+            except Exception:
+                logger.warning("Failed to delete runs for thread %s from store", thread_id, exc_info=True)
+
+        return len(memory_run_ids)
+
 
 class ConflictError(Exception):
     """Raised when multitask_strategy=reject and thread has inflight runs."""

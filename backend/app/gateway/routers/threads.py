@@ -16,15 +16,15 @@ import logging
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Query, Request
 from langgraph.checkpoint.base import empty_checkpoint
 from pydantic import BaseModel, Field, field_validator
 
 from app.gateway.authz import require_permission
-from app.gateway.deps import get_checkpointer
+from app.gateway.deps import get_checkpointer, get_current_user, get_run_manager
 from app.gateway.utils import sanitize_log_param
 from deerflow.config.paths import Paths, get_paths
-from deerflow.runtime import serialize_channel_values
+from deerflow.runtime import RunStatus, serialize_channel_values
 from deerflow.runtime.user_context import get_effective_user_id
 from deerflow.utils.time import coerce_iso, now_iso
 
@@ -211,29 +211,56 @@ def _derive_thread_status(checkpoint_tuple) -> str:
 
 @router.delete("/{thread_id}", response_model=ThreadDeleteResponse)
 @require_permission("threads", "delete", owner_check=True, require_existing=True)
-async def delete_thread_data(thread_id: str, request: Request) -> ThreadDeleteResponse:
-    """Delete local persisted filesystem data for a thread.
+async def delete_thread_data(
+    thread_id: str,
+    request: Request,
+    cleanup_data: bool = Query(default=True, description="Also delete local thread data"),
+) -> ThreadDeleteResponse:
+    """Delete thread with complete cleanup.
 
-    Cleans DeerFlow-managed thread directories, removes checkpoint data,
-    and removes the thread_meta row from the configured ThreadMetaStore
-    (sqlite or memory).
+    Steps:
+    1. Cancel any active runs for this thread
+    2. Delete from LangGraph (via checkpointer)
+    3. Clean up local files (if cleanup_data=true)
+    4. Remove from run store
     """
     from app.gateway.deps import get_thread_store
 
-    # Clean local filesystem
-    response = _delete_thread_data(thread_id, user_id=get_effective_user_id())
+    run_mgr = get_run_manager(request)
+    user_id = await get_current_user(request)
 
-    # Remove checkpoints (best-effort)
-    checkpointer = getattr(request.app.state, "checkpointer", None)
-    if checkpointer is not None:
-        try:
-            if hasattr(checkpointer, "adelete_thread"):
-                await checkpointer.adelete_thread(thread_id)
-        except Exception:
-            logger.debug("Could not delete checkpoints for thread %s (not critical)", sanitize_log_param(thread_id))
+    # Step 1: Cancel active runs
+    active_runs = await run_mgr.list_by_thread(thread_id, user_id=user_id)
+    for run in active_runs:
+        if run.status in (RunStatus.pending, RunStatus.running):
+            logger.info(f"Cancelling active run {run.run_id} before thread deletion")
+            await run_mgr.cancel(run.run_id, action="interrupt")
 
-    # Remove thread_meta row (best-effort) — required for sqlite backend
-    # so the deleted thread no longer appears in /threads/search.
+    # Step 2: Delete from LangGraph (checkpointer)
+    checkpointer = get_checkpointer(request)
+    try:
+        if hasattr(checkpointer, "adelete_thread"):
+            await checkpointer.adelete_thread(thread_id)
+        else:
+            await checkpointer.adelete({"configurable": {"thread_id": thread_id}})
+    except Exception:
+        logger.warning("Could not delete checkpoints for thread %s (not critical)", sanitize_log_param(thread_id))
+
+    # Step 3: Clean up local filesystem (if requested)
+    if cleanup_data:
+        response = _delete_thread_data(thread_id, user_id=get_effective_user_id())
+    else:
+        response = ThreadDeleteResponse(success=True, message="Thread deleted without local data cleanup")
+
+    # Step 4: Clean up run records
+    try:
+        deleted_count = await run_mgr.delete_by_thread(thread_id, user_id=user_id)
+        if deleted_count > 0:
+            logger.info(f"Deleted {deleted_count} run records for thread {thread_id}")
+    except Exception:
+        logger.warning("Failed to clean up run records for thread %s", sanitize_log_param(thread_id), exc_info=True)
+
+    # Step 5: Remove thread_meta row (best-effort)
     try:
         thread_store = get_thread_store(request)
         await thread_store.delete(thread_id)
