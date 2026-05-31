@@ -42,10 +42,8 @@ export function useUpdateSubtask() {
   const { tasks, setTasks } = useSubtaskContext();
   const updateSubtask = useCallback(
     (task: Partial<Subtask> & { id: string }) => {
-      tasks[task.id] = { ...tasks[task.id], ...task } as Subtask;
-      if (task.latestMessage) {
-        setTasks({ ...tasks });
-      }
+      const updatedTask = { ...tasks[task.id], ...task } as Subtask;
+      setTasks({ ...tasks, [task.id]: updatedTask });
     },
     [tasks, setTasks],
   );

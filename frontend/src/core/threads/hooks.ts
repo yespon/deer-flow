@@ -445,6 +445,81 @@ export function useThreadStream({
         return;
       }
 
+      // Handle task completion events to update subtask status
+      if (
+        typeof event === "object" &&
+        event !== null &&
+        "type" in event &&
+        event.type === "task_completed" &&
+        "task_id" in event &&
+        "result" in event
+      ) {
+        const e = event as {
+          type: "task_completed";
+          task_id: string;
+          result: string;
+        };
+        updateSubtask({ id: e.task_id, status: "completed", result: e.result });
+        return;
+      }
+
+      if (
+        typeof event === "object" &&
+        event !== null &&
+        "type" in event &&
+        event.type === "task_failed" &&
+        "task_id" in event &&
+        "error" in event
+      ) {
+        const e = event as {
+          type: "task_failed";
+          task_id: string;
+          error: string;
+        };
+        updateSubtask({ id: e.task_id, status: "failed", error: e.error });
+        return;
+      }
+
+      if (
+        typeof event === "object" &&
+        event !== null &&
+        "type" in event &&
+        event.type === "task_cancelled" &&
+        "task_id" in event
+      ) {
+        const e = event as {
+          type: "task_cancelled";
+          task_id: string;
+          error?: string;
+        };
+        updateSubtask({
+          id: e.task_id,
+          status: "failed",
+          error: e.error ?? "Task cancelled by user",
+        });
+        return;
+      }
+
+      if (
+        typeof event === "object" &&
+        event !== null &&
+        "type" in event &&
+        event.type === "task_timed_out" &&
+        "task_id" in event
+      ) {
+        const e = event as {
+          type: "task_timed_out";
+          task_id: string;
+          error?: string;
+        };
+        updateSubtask({
+          id: e.task_id,
+          status: "failed",
+          error: e.error ?? "Task timed out",
+        });
+        return;
+      }
+
       if (
         typeof event === "object" &&
         event !== null &&
