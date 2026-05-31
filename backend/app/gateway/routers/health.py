@@ -7,9 +7,14 @@ from typing import Literal
 from fastapi import APIRouter, Request
 from pydantic import BaseModel
 
+from app.gateway.performance import SimpleCache
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/health", tags=["health"])
+
+# Cache for health check results (5 second TTL)
+_health_cache = SimpleCache(default_ttl=5)
 
 
 class ComponentHealth(BaseModel):
