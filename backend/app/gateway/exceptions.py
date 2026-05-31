@@ -119,6 +119,66 @@ class RateLimitExceededError(APIError):
         )
 
 
+class RunNotStreamableError(APIError):
+    def __init__(self, run_id: str, reason: str | None = None):
+        super().__init__(
+            code="RUN_NOT_STREAMABLE",
+            message=f"Run '{run_id}' cannot be streamed" + (f" ({reason})" if reason else ""),
+            status_code=409,
+            details={"run_id": run_id, "reason": reason},
+        )
+
+
+class ThreadCreationError(APIError):
+    def __init__(self, message: str = "Failed to create thread"):
+        super().__init__(
+            code="THREAD_CREATION_FAILED",
+            message=message,
+            status_code=500,
+            details={},
+        )
+
+
+class ThreadUpdateError(APIError):
+    def __init__(self, thread_id: str, message: str = "Failed to update thread"):
+        super().__init__(
+            code="THREAD_UPDATE_FAILED",
+            message=message,
+            status_code=500,
+            details={"thread_id": thread_id},
+        )
+
+
+class ThreadStateError(APIError):
+    def __init__(self, thread_id: str, message: str = "Failed to get thread state"):
+        super().__init__(
+            code="THREAD_STATE_ERROR",
+            message=message,
+            status_code=500,
+            details={"thread_id": thread_id},
+        )
+
+
+class ThreadDataDeletionError(APIError):
+    def __init__(self, thread_id: str, message: str = "Failed to delete thread data"):
+        super().__init__(
+            code="THREAD_DATA_DELETION_FAILED",
+            message=message,
+            status_code=500,
+            details={"thread_id": thread_id},
+        )
+
+
+class ValidationError(APIError):
+    def __init__(self, message: str, field: str | None = None):
+        super().__init__(
+            code="VALIDATION_ERROR",
+            message=message,
+            status_code=422,
+            details={"field": field} if field else {},
+        )
+
+
 def _build_error_response(
     code: str,
     message: str,
@@ -162,6 +222,12 @@ async def api_error_handler(request: Request, exc: APIError) -> JSONResponse:
 
 async def generic_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     """Fallback handler for unexpected exceptions."""
+    # Log the full exception for debugging
+    import logging
+
+    logger = logging.getLogger(__name__)
+    logger.exception("Unexpected error occurred: %s", exc)
+
     return _build_error_response(
         code="INTERNAL_ERROR",
         message="An unexpected error occurred",

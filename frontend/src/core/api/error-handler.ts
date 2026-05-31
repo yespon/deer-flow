@@ -38,12 +38,35 @@ export function handleAPIError(error: APIError): void {
 
   // Handle specific errors
   switch (error.code) {
-    case "THREAD_NOT_FOUND":
+    case "THREAD_NOT_FOUND": {
       // Show user-friendly toast
       toast.error(ERROR_MESSAGES[error.code] ?? error.message);
-      // Redirect to new chat
-      window.location.href = "/workspace/chats/new";
+
+      // Prevent infinite redirect loop
+      const currentPath = window.location.pathname;
+      const targetPath = "/workspace/chats/new";
+
+      // Skip redirect if already on target path or recently redirected
+      if (currentPath === targetPath) {
+        console.debug(
+          "[error-handler] Already on new chat page, skipping redirect",
+        );
+        break;
+      }
+
+      // Check if we recently redirected (prevent rapid-fire redirects)
+      const lastRedirect = sessionStorage.getItem("thread_not_found_redirect");
+      const now = Date.now();
+      if (lastRedirect && now - parseInt(lastRedirect, 10) < 5000) {
+        console.debug("[error-handler] Recent redirect detected, skipping");
+        break;
+      }
+
+      // Record redirect timestamp and navigate
+      sessionStorage.setItem("thread_not_found_redirect", now.toString());
+      window.location.href = targetPath;
       break;
+    }
 
     case "RATE_LIMIT_EXCEEDED": {
       const retryAfter =
