@@ -58,7 +58,7 @@ import { pathOfThread, titleOfThread } from "@/core/threads/utils";
 import { env } from "@/env";
 import { isIMEComposing } from "@/lib/ime";
 
-export function RecentChatList() {
+export function RecentChatList({ showLabel = true }: { showLabel?: boolean }) {
   const { t } = useI18n();
   const router = useRouter();
   const pathname = usePathname();
@@ -166,11 +166,13 @@ export function RecentChatList() {
   return (
     <>
       <SidebarGroup>
-        <SidebarGroupLabel>
-          {env.NEXT_PUBLIC_STATIC_WEBSITE_ONLY !== "true"
-            ? t.sidebar.recentChats
-            : t.sidebar.demoChats}
-        </SidebarGroupLabel>
+        {showLabel && (
+          <SidebarGroupLabel>
+            {env.NEXT_PUBLIC_STATIC_WEBSITE_ONLY !== "true"
+              ? t.sidebar.recentChats
+              : t.sidebar.demoChats}
+          </SidebarGroupLabel>
+        )}
         <SidebarGroupContent className="group-data-[collapsible=icon]:pointer-events-none group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0">
           <SidebarMenu>
             <div className="flex w-full flex-col gap-1">
