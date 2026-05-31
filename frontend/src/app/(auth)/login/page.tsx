@@ -2,15 +2,20 @@
 
 import { ArrowRight, Mail, Lock, Building2, User, Shield } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { cn } from "@/lib/utils";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
   const [activeTab, setActiveTab] = useState<"code" | "password">("code");
   const [countdown, setCountdown] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const sendCode = () => {
     if (!email) return;
@@ -24,6 +29,42 @@ export default function LoginPage() {
         return prev - 1;
       });
     }, 1000);
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/v1/auth/login/local", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        credentials: "include",
+        body: new URLSearchParams({
+          username: email,
+          password: password,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.needs_setup) {
+          router.push("/setup");
+        } else {
+          router.push("/workspace");
+        }
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setError(data.detail?.message ?? "登录失败，请检查邮箱和密码");
+      }
+    } catch {
+      setError("网络错误，请稍后重试");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -132,7 +173,7 @@ export default function LoginPage() {
           </div>
 
           {/* Form */}
-          <form className="space-y-4">
+          <form className="space-y-4" onSubmit={handleLogin}>
             {/* Email Input */}
             <div>
               <label className="mb-1.5 block text-sm font-medium text-gray-700">
@@ -145,6 +186,7 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@company.com"
+                  required
                   className="w-full rounded-xl border border-gray-200 bg-white py-3 pr-4 pl-10 text-gray-900 transition-all placeholder:text-gray-400 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 focus:outline-none"
                 />
               </div>
@@ -191,7 +233,10 @@ export default function LoginPage() {
                   <Lock className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-gray-400" />
                   <input
                     type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     placeholder="输入密码"
+                    required={activeTab === "password"}
                     className="w-full rounded-xl border border-gray-200 bg-white py-3 pr-4 pl-10 text-gray-900 transition-all placeholder:text-gray-400 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 focus:outline-none"
                   />
                 </div>
@@ -206,14 +251,29 @@ export default function LoginPage() {
               </div>
             )}
 
+            {/* Error Message */}
+            {error && (
+              <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
+                {error}
+              </div>
+            )}
+
             {/* Submit Button */}
-            <Link
-              href="/workspace"
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-gray-900 py-3.5 font-medium text-white transition-all hover:bg-gray-800"
+            <button
+              type="submit"
+              disabled={
+                loading || !email || (activeTab === "password" && !password)
+              }
+              className={cn(
+                "flex w-full items-center justify-center gap-2 rounded-xl bg-gray-900 py-3.5 font-medium text-white transition-all",
+                loading || !email || (activeTab === "password" && !password)
+                  ? "cursor-not-allowed opacity-70"
+                  : "hover:bg-gray-800",
+              )}
             >
-              登录
-              <ArrowRight className="h-4 w-4" />
-            </Link>
+              {loading ? "登录中..." : "登录"}
+              {!loading && <ArrowRight className="h-4 w-4" />}
+            </button>
           </form>
 
           {/* Divider */}
