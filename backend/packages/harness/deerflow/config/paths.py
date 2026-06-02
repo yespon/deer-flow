@@ -9,6 +9,7 @@ from deerflow.config.runtime_paths import runtime_home
 VIRTUAL_PATH_PREFIX = "/mnt/user-data"
 
 _SAFE_THREAD_ID_RE = re.compile(r"^[A-Za-z0-9_\-]+$")
+_SAFE_TEAM_ID_RE = re.compile(r"^[A-Za-z0-9_\-]+$")
 _SAFE_USER_ID_RE = re.compile(r"^[A-Za-z0-9_\-]+$")
 
 
@@ -29,6 +30,13 @@ def _validate_user_id(user_id: str) -> str:
     if not _SAFE_USER_ID_RE.match(user_id):
         raise ValueError(f"Invalid user_id {user_id!r}: only alphanumeric characters, hyphens, and underscores are allowed.")
     return user_id
+
+
+def _validate_team_id(team_id: str) -> str:
+    """Validate a team ID before using it in filesystem paths."""
+    if not _SAFE_TEAM_ID_RE.match(team_id):
+        raise ValueError(f"Invalid team_id {team_id!r}: only alphanumeric characters, hyphens, and underscores are allowed.")
+    return team_id
 
 
 def _join_host_path(base: str, *parts: str) -> str:
@@ -167,6 +175,28 @@ class Paths:
     def user_agent_memory_file(self, user_id: str, agent_name: str) -> Path:
         """Per-user per-agent memory: `{base_dir}/users/{user_id}/agents/{name}/memory.json`."""
         return self.user_agent_dir(user_id, agent_name) / "memory.json"
+
+    # ── Team-scoped paths ─────────────────────────────────────────────
+
+    def teams_dir(self) -> Path:
+        """Root directory for all team data: ``{base_dir}/teams/``."""
+        return self.base_dir / "teams"
+
+    def team_dir(self, team_id: str) -> Path:
+        """Directory for a specific team: ``{base_dir}/teams/{team_id}/``."""
+        return self.teams_dir() / _validate_team_id(team_id)
+
+    def team_memory_file(self, team_id: str) -> Path:
+        """Per-team memory file: ``{base_dir}/teams/{team_id}/memory.json``."""
+        return self.team_dir(team_id) / "memory.json"
+
+    def team_agents_dir(self, team_id: str) -> Path:
+        """Per-team root for shared agents: ``{base_dir}/teams/{team_id}/agents/``."""
+        return self.team_dir(team_id) / "agents"
+
+    def team_agent_memory_file(self, team_id: str, agent_name: str) -> Path:
+        """Per-team per-agent memory: ``{base_dir}/teams/{team_id}/agents/{name}/memory.json``."""
+        return self.team_agents_dir(team_id) / agent_name.lower() / "memory.json"
 
     def thread_dir(self, thread_id: str, *, user_id: str | None = None) -> Path:
         """

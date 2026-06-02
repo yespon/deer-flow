@@ -60,6 +60,25 @@ class MemoryConfig(BaseModel):
         le=8000,
         description="Maximum tokens to use for memory injection",
     )
+    scope_isolation: str = Field(
+        default="user",
+        description=(
+            "Memory isolation level controlling which scopes are read during injection. "
+            "Options: "
+            "'global' (shared memory for all users), "
+            "'user' (per-user memory, current default), "
+            "'scoped' (merge global + team + user with precedence). "
+            "When set to 'scoped', the ScopedMemoryService is used for reads."
+        ),
+    )
+    team_membership_backend: str = Field(
+        default="file",
+        description=("Backend for team membership resolution. 'file' uses a JSON file at {base_dir}/teams/membership.json. 'config' reads from config.yaml team_membership section. 'sql' uses a database table (requires enterprise module)."),
+    )
+    default_write_scope: str = Field(
+        default="user",
+        description=("Default scope for writing memory from conversations. 'user' writes to per-user memory (current behavior). 'team' writes to the user's primary team. Team and global scopes can also be written via explicit API calls."),
+    )
 
 
 # Global configuration instance

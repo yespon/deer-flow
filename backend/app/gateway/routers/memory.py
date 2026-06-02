@@ -3,6 +3,8 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
+from deerflow.agents.memory.scoped_memory_service import get_scoped_memory_service
+from deerflow.agents.memory.team_membership import get_team_membership_store
 from deerflow.agents.memory.updater import (
     clear_memory_data,
     create_memory_fact,
@@ -98,6 +100,26 @@ class MemoryConfigResponse(BaseModel):
     fact_confidence_threshold: float = Field(..., description="Minimum confidence threshold for facts")
     injection_enabled: bool = Field(..., description="Whether memory injection is enabled")
     max_injection_tokens: int = Field(..., description="Maximum tokens for memory injection")
+
+
+class ScopeInfo(BaseModel):
+    """Information about a memory scope."""
+
+    scope: str = Field(..., description="Scope level: global, team, or user")
+    team_id: str | None = Field(default=None, description="Team ID for team scope")
+    user_id: str | None = Field(default=None, description="User ID for user scope")
+    agent_name: str | None = Field(default=None, description="Agent name for per-agent memory")
+
+
+class MergedMemoryResponse(BaseModel):
+    """Response for merged memory across all accessible scopes."""
+
+    version: str = Field(default="1.0", description="Memory schema version")
+    lastUpdated: str = Field(default="", description="Last update timestamp")
+    user: UserContext = Field(default_factory=UserContext)
+    history: HistoryContext = Field(default_factory=HistoryContext)
+    facts: list[Fact] = Field(default_factory=list)
+    scopes: list[ScopeInfo] = Field(default_factory=list, description="Scopes that contributed to this merged view")
 
 
 class MemoryStatusResponse(BaseModel):
@@ -354,3 +376,123 @@ async def get_memory_status() -> MemoryStatusResponse:
         ),
         data=MemoryResponse(**memory_data),
     )
+
+
+# ── Scope-aware endpoints ────────────────────────────────────────────────
+
+
+@router.get(
+    "/memory/merged",
+    response_model=MergedMemoryResponse,
+    response_model_exclude_none=True,
+    summary="Get Merged Memory (All Scopes)",
+    description="Retrieve memory merged across all accessible scopes: global + teams + user. This is the endpoint used for prompt injection.",
+)
+async def get_merged_memory(agent_name: str | None = None) -> MergedMemoryResponse:
+    """Get memory merged across global, team, and user scopes."""
+    service = get_scoped_memory_service()
+    user_id = get_effective_user_id()
+    memory_data = service.read_merged(user_id=user_id, agent_name=agent_name)
+
+    # List the scopes that were accessible
+    scopes = service.list_accessible_scopes(user_id=user_id)
+    scope_infos = [
+        ScopeInfo(
+            scope=s.scope.value,
+            team_id=s.team_id,
+            user_id=s.user_id,
+            agent_name=s.agent_name,
+        )
+        for s in scopes
+    ]
+
+    return MergedMemoryResponse(
+        **{k: v for k, v in memory_data.items() if k != "_scope"},
+        scopes=scope_infos,
+    )
+
+
+@router.get(
+    "/memory/scopes",
+    response_model=list[ScopeInfo],
+    summary="List Accessible Scopes",
+    description="List all memory scopes accessible to the current user.",
+)
+async def list_scopes() -> list[ScopeInfo]:
+    """List all accessible memory scopes for the current user."""
+    service = get_scoped_memory_service()
+    user_id = get_effective_user_id()
+    scopes = service.list_accessible_scopes(user_id=user_id)
+    return [
+        ScopeInfo(
+            scope=s.scope.value,
+            team_id=s.team_id,
+            user_id=s.user_id,
+            agent_name=s.agent_name,
+        )
+        for s in scopes
+    ]
+
+
+@router.get(
+    "/memory/team/{team_id}",
+    response_model=MemoryResponse,
+    response_model_exclude_none=True,
+    summary="Get Team Memory",
+    description="Retrieve memory for a specific team. The user must be a member of the team.",
+)
+async def get_team_memory(team_id: str) -> MemoryResponse:
+    """Get memory for a specific team."""
+    user_id = get_effective_user_id()
+    membership = get_team_membership_store()
+
+    # Verify membership
+    if user_id != "default":
+        teams = membership.get_teams_for_user(user_id)
+        if team_id not in teams:
+            from fastapi import HTTPException
+
+            raise HTTPException(status_code=403, detail=f"User is not a member of team '{team_id}'")
+
+    memory_data = get_memory_data(team_id=team_id)
+    return MemoryResponse(**memory_data)
+
+
+@router.post(
+    "/memory/team/{team_id}/facts",
+    response_model=MemoryResponse,
+    response_model_exclude_none=True,
+    summary="Create Team Memory Fact",
+    description="Create a fact in team-scoped memory.",
+)
+async def create_team_memory_fact(team_id: str, request: FactCreateRequest) -> MemoryResponse:
+    """Create a fact in team-scoped memory."""
+    try:
+        memory_data = create_memory_fact(
+            content=request.content,
+            category=request.category,
+            confidence=request.confidence,
+            team_id=team_id,
+        )
+    except ValueError as exc:
+        raise _map_memory_fact_value_error(exc) from exc
+    except OSError as exc:
+        raise HTTPException(status_code=500, detail="Failed to create team memory fact.") from exc
+
+    return MemoryResponse(**memory_data)
+
+
+# ── Team membership management ───────────────────────────────────────────
+
+
+@router.get(
+    "/memory/teams",
+    response_model=list[str],
+    summary="List User's Teams",
+    description="List all team IDs the current user belongs to.",
+)
+async def list_user_teams() -> list[str]:
+    """List all teams the current user belongs to."""
+    user_id = get_effective_user_id()
+    membership = get_team_membership_store()
+    return membership.get_teams_for_user(user_id)

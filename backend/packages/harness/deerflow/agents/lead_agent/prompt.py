@@ -554,6 +554,9 @@ combined with a FastAPI gateway for REST API access [citation:FastAPI](https://f
 def _get_memory_context(agent_name: str | None = None, *, app_config: AppConfig | None = None) -> str:
     """Get memory context for injection into system prompt.
 
+    Reads memory from all accessible scopes (global + team + user),
+    merges with precedence, and formats for prompt injection.
+
     Args:
         agent_name: If provided, loads per-agent memory. If None, loads global memory.
         app_config: Explicit application config. When provided, memory options
@@ -563,7 +566,8 @@ def _get_memory_context(agent_name: str | None = None, *, app_config: AppConfig 
         Formatted memory context string wrapped in XML tags, or empty string if disabled.
     """
     try:
-        from deerflow.agents.memory import format_memory_for_injection, get_memory_data
+        from deerflow.agents.memory import format_memory_for_injection
+        from deerflow.agents.memory.scoped_memory_service import get_scoped_memory_service
         from deerflow.runtime.user_context import get_effective_user_id
 
         if app_config is None:
@@ -576,7 +580,10 @@ def _get_memory_context(agent_name: str | None = None, *, app_config: AppConfig 
         if not config.enabled or not config.injection_enabled:
             return ""
 
-        memory_data = get_memory_data(agent_name, user_id=get_effective_user_id())
+        user_id = get_effective_user_id()
+        service = get_scoped_memory_service()
+        # Read merged memory across global + teams + user
+        memory_data = service.read_merged(user_id=user_id, agent_name=agent_name)
         memory_content = format_memory_for_injection(memory_data, max_tokens=config.max_injection_tokens)
 
         if not memory_content.strip():
