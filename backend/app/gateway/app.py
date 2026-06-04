@@ -16,6 +16,7 @@ from app.gateway.exceptions import (
     generic_exception_handler,
 )
 from app.gateway.routers import (
+    admin,
     agents,
     artifacts,
     assistants_compat,
@@ -378,6 +379,9 @@ This gateway provides runtime endpoints for agent runs plus custom endpoints for
 
     # Stateless Runs API (stream/wait without a pre-existing thread)
     app.include_router(runs.router)
+
+    # Admin API is mounted at /api/v1/admin
+    app.include_router(admin.router)
 
     # Health API is mounted at /api/health
     app.include_router(health.router)

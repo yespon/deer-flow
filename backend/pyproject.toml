@@ -23,6 +23,7 @@ dependencies = [
     "email-validator>=2.0.0",
     "casbin>=1.43.0",
     "cryptography>=46.0.7",
+    "filelock>=3.29.1",
 ]
 
 [project.optional-dependencies]
